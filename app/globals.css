@@ -1,0 +1,1856 @@
+@import "tailwindcss";
+
+/* Runtime emergency flag is stamped by the Worker before HTML reaches the browser. */
+html[data-hall-live-enabled="false"] [data-hall-live-link],
+html[data-hall-live-enabled="false"] [data-hall-live-content] {
+  display: none !important;
+}
+
+/* Lets the browser interpolate --theme as VenueReveal scrubs it on scroll. */
+@property --theme {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/*
+ * The colour of the single fixed backdrop (BracketsField). Registered as a
+ * <color> so it can interpolate frame by frame as VenueReveal scrubs --theme
+ * (and so --ink, which this defaults to) on scroll.
+ */
+@property --page-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #000000;
+}
+
+/*
+ * Lets BracketsField's 3D layer be faded out by a section that needs the
+ * area behind it fully clear (e.g. VenueReveal, which paints its own opaque
+ * stage and doesn't want the brackets' silhouette showing through at its
+ * edges). Defaults to fully visible everywhere else.
+ */
+@property --brackets-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+/*
+ * DevFest Chennai brand palette. Core, halftone, pastel and greyscale ramps as
+ * supplied by the brand kit — do not hand-mix new shades; pick from these.
+ */
+:root {
+  /*
+   * Greyscale, driven by --theme (0 = dark, 1 = light). A single scrubbed value
+   * flips the whole site's background and foreground together: the fixed
+   * backdrop reads var(--ink), all text reads var(--paper), and the card
+   * surfaces below are mixed from these two — so animating --theme from 0 → 1
+   * turns the page from dark to light in one pass. VenueReveal.tsx scrubs it as
+   * that section is reached; it clamps at 1, so the page stays light below and
+   * returns to dark above.
+   *
+   * The light end of --paper is pure black (var(--black)), not #1e1e1e, so the
+   * muted text ramp (text-paper/60 and friends, done with alpha) keeps contrast
+   * over white: /60 from #000 is 5.74:1 (passes AA) where #1e1e1e would fail.
+   * Dark mode is unaffected (--theme 0 → #f0f0f0).
+   */
+  --theme: 0;
+  /* Solid fallbacks first: Safari < 16.2 / older Chromium drop the whole
+     declaration if they don't understand `color-mix`, which would leave
+     text and surfaces unstyled. */
+  --ink: #000;
+  --paper: #f0f0f0;
+  --ink: color-mix(in srgb, var(--black), #ffffff calc(var(--theme) * 100%));
+  --paper: color-mix(in srgb, #f0f0f0, var(--black) calc(var(--theme) * 100%));
+
+  /*
+   * The single fixed backdrop reads this instead of --ink directly, defaulting
+   * to the theme-driven greyscale (see --theme above, scrubbed by VenueReveal).
+   */
+  --page-bg: var(--ink);
+
+  /*
+   * Card/panel surfaces. OPAQUE by construction, and that is the whole point.
+   *
+   * These were alpha washes (`bg-paper/[0.03]`), which look identical to these
+   * values over the flat page — but the page is not flat. BracketsField paints
+   * a fixed 3D layer of brand shapes behind everything, so a 97%-transparent
+   * card let an extruded bracket travel straight through the card and its text.
+   * Mixing into --ink instead of into `transparent` keeps the exact same
+   * appearance while making the surface actually occlude what is behind it.
+   *
+   * Any panel that carries text over the homepage backdrop uses one of these,
+   * never an alpha wash.
+   *
+   * Mixed from --paper and --ink (3% and 5% paper over ink) so they flip with
+   * --theme along with everything else: dark → rgb(7,7,7) / rgb(12,12,12),
+   * exactly as before; light → the same tints inverted (near-white cards over
+   * the white page). The outer mix with `transparent 18%` is the 0.82 alpha
+   * discussed below.
+   *
+   * The 0.82 alpha is measured, not picked. Fully opaque killed the depth the
+   * 3D layer exists to create; too transparent and a bright bracket drifting
+   * behind a card drags its text under AA.
+   *
+   * What sets the ceiling is TEXT COLOUR, not this value. While the track
+   * headings were rendered in brand colours, #ea4335 (weakest at 5.35:1 on
+   * black) capped every card on the page at 8% bleed. Moving those headings to
+   * --paper (see TrackCards) raised the ceiling to 29%, so this is now chosen
+   * for how it looks rather than to scrape past a ratio:
+   *
+   *   18% bleed (0.82) -> 5.67:1   <- chosen, a full point of margin
+   *   29% bleed (0.71) -> 4.67:1   the actual ceiling
+   *
+   * At 18% a gold bracket behind a card renders rgb(51,37,6) against the card's
+   * rgb(7,7,7) — plainly readable as movement — while over the flat page the
+   * card is rgb(6,6,6), indistinguishable from opaque.
+   *
+   * Note what is NOT done here: the 3D shapes are left at full brightness.
+   * Dimming them buys bleed (13% at 60%) but degrades every open area of the
+   * page, where the brackets are the only visual interest and nothing is in
+   * front of them — trading the majority of the page to fix the minority.
+   */
+  --surface: color-mix(in srgb, color-mix(in srgb, var(--paper) 3%, var(--ink)), transparent 18%);
+  --surface-raised: color-mix(in srgb, color-mix(in srgb, var(--paper) 5%, var(--ink)), transparent 18%);
+
+  /* Core */
+  --blue: #4285f4;
+  --green: #34a853;
+  --yellow: #f9ab00;
+  --red: #ea4335;
+  /* Third-place medal on the games leaderboard — no other use. */
+  --bronze: #cd7f32;
+  --purple: #a136f7;
+  --black: #000;
+  --orig-black: #131313;
+
+  /* Halftones — mid-tones, legible under ink text */
+  --blue-halftone: #57caff;
+  --green-halftone: #5cdb6d;
+  --yellow-halftone: #ffd427;
+  --red-halftone: #ff7daf;
+  --purple-halftone: #9559c7;
+
+  /* Pastels — lightest tints */
+  --blue-pastel: #c3ecf6;
+  --green-pastel: #ccf6c5;
+  --yellow-pastel: #ffe7a5;
+  --red-pastel: #f8d8d8;
+  --purple-pastel: #e2c0fd;
+}
+
+/*
+ * Lite mode's background: fully --orig-black (#131313), not the site's
+ * usual pure --ink black. `html.lite` is set by the pre-paint bridge script
+ * in app/layout.tsx (mirrors isLiteMode()) so this applies before first
+ * paint. --page-bg drives BracketsField's fixed backdrop; the body rule
+ * covers the same colour underneath it.
+ */
+html.lite {
+  --page-bg: var(--orig-black);
+}
+html.lite body {
+  background-color: var(--orig-black);
+}
+
+/*
+ * Which nav renders is decided by the same `html.lite` class, not React
+ * state — it's set pre-paint by the bridge script in app/layout.tsx, so
+ * gating on it here means the right nav is present from first paint with no
+ * hydration flash. Full mode gets the hamburger (nav-hamburger-only); lite
+ * mode gets the old pill bar (nav-lite-only), since the hamburger's expanding
+ * panel leans on motion lite mode is meant to skip.
+ */
+.nav-hamburger-only {
+  display: none;
+}
+html:not(.lite) .nav-hamburger-only {
+  display: block;
+}
+.nav-lite-only {
+  display: none;
+}
+html.lite .nav-lite-only {
+  display: flex;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-page-bg: var(--page-bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+
+  --color-blue: var(--blue);
+  --color-red: var(--red);
+  --color-yellow: var(--yellow);
+  --color-green: var(--green);
+  --color-purple: var(--purple);
+  --color-bronze: var(--bronze);
+
+  --color-blue-halftone: var(--blue-halftone);
+  --color-green-halftone: var(--green-halftone);
+  --color-yellow-halftone: var(--yellow-halftone);
+  --color-red-halftone: var(--red-halftone);
+  --color-purple-halftone: var(--purple-halftone);
+
+  --color-blue-pastel: var(--blue-pastel);
+  --color-green-pastel: var(--green-pastel);
+  --color-yellow-pastel: var(--yellow-pastel);
+  --color-red-pastel: var(--red-pastel);
+  --color-purple-pastel: var(--purple-pastel);
+
+  --font-google-sans: "Google Sans";
+  --font-sans: var(--font-google-sans);
+
+  --animate-fade-in: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--paper);
+  font-family: var(--font-google-sans), system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+
+/*
+ * Scrollbar is chrome the scroll-driven motion on this page doesn't want
+ * competing for attention. Mobile browsers already auto-hide theirs as an
+ * overlay, so this only changes anything on desktop/trackpad browsers.
+ */
+html {
+  scrollbar-width: none;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * The first-paint preloader (#boot-preloader) is defined inline in the document
+ * <head> (see app/layout.tsx), not here — it must apply at first paint without
+ * waiting on this stylesheet to download, and be visible by default rather than
+ * gated on a script-added class (which lands a frame late in dev).
+ */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/*
+ * Content that rises into place as the picture row lands. Starts hidden in CSS
+ * so there is no flash before the hook's first frame — the same reason
+ * .hallway-card does.
+ */
+.hallway-rise {
+  opacity: 0;
+}
+
+html.gpu .hallway-rise {
+  will-change: transform, opacity;
+}
+
+/*
+ * VenueReveal's black cover panel. Fill is solid; the dissolve is a mask so
+ * WebKit does not flatten a transparent gradient on a transformed layer
+ * (mobile was painting a hard black slab). Both prefixes: Firefox needs
+ * `mask-image`, Safari needs `-webkit-mask-image`.
+ */
+.venue-overlay-dissolve {
+  background-color: #000;
+  /* Same stop positions as the original overlay fill on main — solid by 24%
+     so the leading-edge feather stays short as the panel rises. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.04) 3%,
+    rgba(0, 0, 0, 0.15) 6.5%,
+    rgba(0, 0, 0, 0.35) 10%,
+    rgba(0, 0, 0, 0.6) 13%,
+    rgba(0, 0, 0, 0.82) 16.5%,
+    rgba(0, 0, 0, 0.95) 20%,
+    #000 24%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.04) 3%,
+    rgba(0, 0, 0, 0.15) 6.5%,
+    rgba(0, 0, 0, 0.35) 10%,
+    rgba(0, 0, 0, 0.6) 13%,
+    rgba(0, 0, 0, 0.82) 16.5%,
+    rgba(0, 0, 0, 0.95) 20%,
+    #000 24%
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* Darkened space the hallway photos fly through; opacity is driven by the hook. */
+.hallway-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/*
+ * The light at the end of the tunnel: the destination glowing into view so a
+ * visitor can see how far is left without any progress chrome. Opacity and
+ * scale are driven by the hook; the gradient itself never changes, so this
+ * stays a compositor-only effect.
+ */
+.hallway-beacon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--paper) 82%, transparent),
+    color-mix(in srgb, var(--blue) 26%, transparent) 55%,
+    transparent 78%
+  );
+  transform: translate(-50%, -50%) scale(0.18);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.gpu .hallway-beacon {
+  will-change: transform, opacity;
+}
+
+/*
+ * Holds only the flying photos, so their 3D tilt has somewhere to project.
+ * Deliberately not on the parent: the backdrop, beacon and stack must stay
+ * square to the viewer, and perspective on a shared ancestor would skew them.
+ */
+.hallway-corridor {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+  pointer-events: none;
+  /*
+   * Above the stack (2), and it must be explicit. `perspective` creates a
+   * stacking context, so the flying cards' own z-indexes are sealed inside this
+   * wrapper and cannot lift them past the destination on their own — left at
+   * `auto` the stack painted over the whole corridor. Every flying photo is
+   * nearer the camera than the far end of the tunnel, so the corridor as a
+   * whole outranks it.
+   */
+  z-index: 3;
+}
+
+/*
+ * A photo card in the scroll hallway (see components/motion/usePhotoHallway.ts).
+ * Starts hidden and centred so nothing flashes at full size before the first
+ * frame renders. Layer promotion (will-change / backface-visibility) is
+ * gated on html.gpu — a hardware GPU (see lib/gpu.ts). Software rasterizers
+ * pay more for extra compositor layers than they save.
+ * No blurred box-shadow: re-rendering a large blur on a dozen
+ * scaling cards every frame is what tanks the frame rate.
+ */
+.hallway-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w, 32vw);
+  aspect-ratio: var(--card-ar, 3 / 2);
+  transform: translate(-50%, -50%) scale(0.15);
+  opacity: 0;
+  pointer-events: none;
+}
+
+html.gpu .hallway-card {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/*
+ * The destination waiting at the end of the tunnel. The GROUP carries opacity
+ * and the approach transform; the cards inside stay fully opaque, because
+ * fading them individually would stack semi-transparent photos into mud rather
+ * than reading as depth.
+ */
+.hallway-stack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* No max-width: the hook measures this box to work out how far to shrink the
+     group so N cards span the row, and a clamp would desync that arithmetic. */
+  width: 34vw;
+  aspect-ratio: 3 / 2;
+  transform: translate(-50%, -50%) scale(0.07);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+html.gpu .hallway-stack {
+  will-change: transform, opacity;
+}
+
+.stack-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: var(--card-ar, 3 / 2);
+  transform: translate(-50%, -50%);
+  backface-visibility: hidden;
+  border-radius: 6px;
+  overflow: hidden;
+  /* Opaque backing, so a card that has not decoded yet still occludes the one
+     behind it and the deck never looks see-through. */
+  background: var(--ink);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 12%, transparent);
+}
+
+/*
+ * Atmospheric haze over the destination — tinted toward the brand blue rather
+ * than flat ink, because distance in air shifts things cooler, not merely
+ * fainter. Sits above the deck but inside the group, so it scales and travels
+ * with it. See HALLWAY_HAZE_CLASS for why this is not just group opacity.
+ */
+.hallway-haze {
+  position: absolute;
+  inset: -2%;
+  z-index: 200;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blue) 14%, var(--ink));
+  pointer-events: none;
+  will-change: opacity;
+}
+
+
+/*
+ * The header is sticky at 4rem, so anything jumped to by anchor — #main from
+ * the skip link, #after-hero from the hero's escape hatch — landed underneath
+ * it. Applies to native anchor navigation and scrollIntoView; Lenis does its
+ * own maths and is offset at the call site in HeroSection.
+ */
+[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Section divider (components/SectionDivider.tsx)
+ *
+ * A bare hairline that draws itself rightward as the section enters. Done with
+ * a CSS scroll-driven timeline rather than an IntersectionObserver so it needs
+ * no JavaScript and no hydration: browsers without `animation-timeline` simply
+ * render the finished rule, which is the correct fallback for something purely
+ * decorative. The dot and chapter number it used to carry were redundant
+ * against the SectionHeading eyebrow directly below — see the component.
+ * ------------------------------------------------------------------------ */
+.section-divider {
+  height: 1px;
+  background: color-mix(in srgb, var(--paper) 14%, transparent);
+  transform-origin: left center;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-divider {
+      animation: divider-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 70%;
+    }
+  }
+}
+
+@keyframes divider-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Track cards (components/TrackCards.tsx)
+ *
+ * A soft wash of the track's own colour follows the pointer. Both custom
+ * properties are written straight onto the node by the pointermove handler;
+ * only opacity and the gradient position change, so there is no layout work.
+ * ------------------------------------------------------------------------ */
+.track-card {
+  position: relative;
+  --spot-on: 0;
+  --spot-x: 50%;
+  --spot-y: 0%;
+}
+
+.track-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  opacity: var(--spot-on);
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    16rem circle at var(--spot-x) var(--spot-y),
+    color-mix(in srgb, var(--spot-color, var(--blue)) 18%, transparent),
+    transparent 70%
+  );
+}
+
+/* A pointer-tracked highlight is meaningless without a pointer, and on touch
+   the value sticks on after a tap. */
+@media (hover: none) {
+  .track-card::before {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Ticket stub (components/TicketStub.tsx)
+ *
+ * Perforation is a dashed edge plus two ink-filled notches punched out of the
+ * border, so the seam reads as torn rather than as a table cell divider. The
+ * split runs vertically on desktop and horizontally once the stub stacks.
+ * ------------------------------------------------------------------------ */
+.ticket-stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
+  /*
+   * All four brand colours, but as a wash at 8% rather than a saturated
+   * gradient. The ticket is a text surface: a full-strength four-hue gradient
+   * behind body copy makes contrast vary by region, and reads like a generic
+   * SaaS hero rather than DevFest. At this alpha it gives the panel warmth and
+   * the colour identity is carried properly by the edge below.
+   *
+   * 8% of yellow is the lightest point this can reach; every text colour on
+   * the ticket is checked against that worst case, not against flat ink.
+   */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--blue) 8%, transparent),
+    color-mix(in srgb, var(--red) 6%, transparent) 38%,
+    color-mix(in srgb, var(--yellow) 8%, transparent) 68%,
+    color-mix(in srgb, var(--green) 6%, transparent)
+  );
+}
+
+/*
+ * The four colours at full strength, confined to a 2px edge where there is no
+ * text to sit on them. This is where the ticket says "Google" — a place a
+ * gradient can be unapologetic without costing a single contrast point.
+ */
+.ticket-stub::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    var(--blue),
+    var(--red) 34%,
+    var(--yellow) 67%,
+    var(--green)
+  );
+}
+
+/* The foil sheen. Paint only — it never moves anything. */
+.ticket-stub::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    22rem circle at var(--sheen-x, 50%) var(--sheen-y, 50%),
+    color-mix(in srgb, var(--paper) 10%, transparent),
+    transparent 65%
+  );
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ticket-stub::after {
+    opacity: var(--sheen-on, 0);
+    transition: opacity 300ms ease;
+  }
+}
+
+/* Above the sheen, which sits at z-index 0. */
+.ticket-stub__body,
+.ticket-stub__end {
+  position: relative;
+  z-index: 1;
+}
+
+.ticket-stub__body {
+  flex: 1;
+  padding: 1.75rem;
+}
+
+.ticket-stub__end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem;
+  text-align: center;
+  /*
+   * The torn-off half, lifted clear of the body so the perforation reads as a
+   * real seam rather than a decorative dashed line. Costs contrast: every
+   * label on this panel had to move up an opacity step to stay above 4.5:1.
+   *
+   * --surface-raised, not a 5%-into-transparent wash: same colour, but opaque,
+   * so the 3D backdrop cannot travel through the stub's labels.
+   */
+  background: var(--surface-raised);
+}
+
+/*
+ * The seam. `currentColor` is not used here because the notches must match the
+ * page behind the stub exactly, not the text — so they read as var(--page-bg)
+ * (the scroll-cycled backdrop colour), not the old fixed --ink.
+ */
+.ticket-stub__perf {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--paper) 22%, transparent);
+}
+
+.ticket-stub__perf::before,
+.ticket-stub__perf::after {
+  content: "";
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--page-bg);
+  border: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
+}
+
+/* Stacked: notches bite in from the left and right edges. */
+.ticket-stub__perf::before {
+  left: -0.625rem;
+  top: -0.625rem;
+}
+
+.ticket-stub__perf::after {
+  right: -0.625rem;
+  top: -0.625rem;
+}
+
+@media (min-width: 640px) {
+  .ticket-stub {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .ticket-stub__end {
+    width: 16rem;
+  }
+
+  .ticket-stub__perf {
+    border-top: 0;
+    border-left: 1px dashed color-mix(in srgb, var(--paper) 22%, transparent);
+  }
+
+  /* Side by side: notches bite in from the top and bottom edges. */
+  .ticket-stub__perf::before {
+    left: -0.625rem;
+    top: -0.625rem;
+  }
+
+  .ticket-stub__perf::after {
+    left: -0.625rem;
+    top: auto;
+    bottom: -0.625rem;
+    right: auto;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Tilt card (components/TiltCard.tsx)
+ *
+ * The transform is declared only inside the positive media query, so on touch
+ * and under reduced-motion the element is never transformed at all — no
+ * override to fight, and no stuck rotation after a tap.
+ * ------------------------------------------------------------------------ */
+.tilt-scene {
+  perspective: 1000px;
+}
+
+.tilt-card {
+  transform-style: preserve-3d;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .tilt-card {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 220ms ease-out;
+    will-change: transform;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 404 signal dots (app/not-found.tsx)
+ *
+ * Four brand dots, one burnt out. The empty one breathes very slowly — slow
+ * enough to read as ambient rather than as something demanding attention,
+ * which on an error page matters more than on any other. Opacity only, so it
+ * stays off the main thread, and it never moves anything.
+ * ------------------------------------------------------------------------ */
+.signal-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.signal-dots__dot {
+  height: 0.625rem;
+  width: 0.625rem;
+  border-radius: 9999px;
+}
+
+.signal-dots__dot--out {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paper) 30%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .signal-dots__dot--out {
+    animation: signal-out 3.2s ease-in-out infinite;
+  }
+}
+
+@keyframes signal-out {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* First focusable element: hidden until focused, per WCAG 2.4.1 */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0.5rem;
+  z-index: 100;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  transition: top 150ms ease;
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Glow button (components/GlowButton.tsx)
+ *
+ * A glassmorphism control with a neon four-colour border that reads as one
+ * smooth gradient wrapping the shape, not four flat corners. Two layers share
+ * the same conic-gradient so the crisp ring and its soft bleed stay in
+ * registration as the angle rotates:
+ *   ::before - a 1.5px ring, cut down with the classic padding + mask-XOR
+ *              trick so only the outline itself is visible.
+ *   ::after  - the same gradient, enlarged and blurred, behind the glass
+ *              surface as the halo.
+ * `--glow-angle` is a registered <angle> so it animates smoothly rather than
+ * snapping; `glow-rotate` turns it for the "smooth" look the brief asked for.
+ * A press adds .glow-btn--burst (see GlowButton's `burst()`), which spikes
+ * the halo's blur/opacity/reach and eases back — the energy-dispersing
+ * moment — without touching the rotation, so the two animations never fight
+ * over the same property. Both animations are gated on
+ * prefers-reduced-motion; reduced-motion users still get the burst's opacity
+ * change since that reads as feedback, not motion.
+ *
+ * `.glow-btn__corners` is a third, separate layer (::before/::after are
+ * already spoken for) for the corner "pooling" look from the reference
+ * asset: light gathers noticeably brighter at the rounded ends than along
+ * the straight edges. A conic-gradient ring alone doesn't produce that — it
+ * spreads colour evenly by angle — so four radial blooms sit at the
+ * bounding-box corners instead, each a brand colour, blurred heavily. Shared
+ * by all three shapes, "circle" included — its square bounding box still has
+ * four corners even though the visible ring is round, so the same four
+ * blooms read as light gathering at the diagonals.
+ * ------------------------------------------------------------------------ */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+
+.glow-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  --glow-angle: 0deg;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.glow-btn::before,
+.glow-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    var(--red),
+    var(--yellow),
+    var(--green),
+    var(--blue),
+    var(--red)
+  );
+  pointer-events: none;
+}
+
+.glow-btn::before {
+  z-index: 1;
+  padding: 1.5px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.glow-btn::after {
+  z-index: -1;
+  inset: -10px;
+  filter: blur(18px);
+  /* Hidden at rest — this layer is the click-triggered energy burst, not an
+     ambient glow. The always-on look comes entirely from the ring
+     (::before) and the corner pooling (.glow-btn__corners) below. */
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glow-btn {
+    animation: glow-rotate 6s linear infinite;
+  }
+}
+
+@keyframes glow-rotate {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+
+.glow-btn--burst {
+  /* Contain burst animation to prevent sibling jitter (e.g., hamburger shaking
+     when nearby scroll-arrow button is clicked). The burst ::after expands its
+     filter/inset box drastically, which can trigger reflow in fixed siblings
+     if not isolated.
+     `layout`, NOT `paint`: the always-on ambient glow (.glow-btn__corners, the
+     halo ::after) bleeds past this element's own border box on purpose via
+     negative inset — that's the whole look. `contain: paint` clips a box's
+     content to that box, so for as long as this class was applied it clipped
+     off exactly that bleed, i.e. the button's own glow briefly vanished on
+     every click. `contain: layout` isolates this element's internal layout
+     changes from the rest of the page (the actual reflow-jitter fix the
+     comment above describes) without imposing that overflow clip. */
+  will-change: filter;
+  contain: layout;
+}
+
+.glow-btn--burst::after {
+  animation: glow-burst 900ms ease-in-out;
+}
+
+@keyframes glow-burst {
+  0% {
+    opacity: 0;
+    filter: blur(18px);
+    inset: -10px;
+  }
+  35% {
+    /* Gentle, not a flash — a soft breath of light from behind the button,
+       barely spreading past its idle bounds. */
+    opacity: 0.2;
+    filter: blur(19px);
+    inset: -11px;
+  }
+  100% {
+    opacity: 0;
+    filter: blur(18px);
+    inset: -10px;
+  }
+}
+
+.glow-btn__corners {
+  content: "";
+  position: absolute;
+  /*
+   * z-index: 3 — above the z-index: 2 glass surface, not below it. This is
+   * meant to read as the top-most layer, sitting on the button rather than
+   * bleeding out from underneath it (that's what the click ::after burst is
+   * for). pointer-events: none keeps it from blocking clicks on the surface
+   * beneath.
+   */
+  inset: -22px;
+  z-index: 3;
+  pointer-events: none;
+  /* Milder than the first pass — this is the always-on accent, not the
+     click glow, so it should read as a soft trim rather than compete with it. */
+  opacity: 0.5;
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  transition: opacity 200ms ease, filter 200ms ease;
+  background:
+    radial-gradient(closest-side, var(--red), transparent 70%) 0% 0% / 55% 100% no-repeat,
+    radial-gradient(closest-side, var(--yellow), transparent 70%) 100% 0% / 55% 100% no-repeat,
+    radial-gradient(closest-side, var(--blue), transparent 70%) 100% 100% / 55% 100% no-repeat,
+    radial-gradient(closest-side, var(--green), transparent 70%) 0% 100% / 55% 100% no-repeat;
+}
+
+.glow-btn--burst .glow-btn__corners {
+  animation: corner-burst 650ms ease-out;
+}
+
+@keyframes corner-burst {
+  0% {
+    opacity: 0.5;
+    filter: blur(12px);
+    inset: -22px;
+  }
+  30% {
+    opacity: 0.85;
+    filter: blur(22px);
+    inset: -32px;
+  }
+  100% {
+    opacity: 0.5;
+    filter: blur(12px);
+    inset: -22px;
+  }
+}
+
+.glow-btn__surface {
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--paper) 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--paper) 25%, transparent),
+    inset 0 -6px 16px color-mix(in srgb, var(--ink) 35%, transparent);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.glow-btn__surface:hover {
+  background: color-mix(in srgb, var(--paper) 16%, transparent);
+}
+
+.glow-btn__surface:active {
+  transform: scale(0.96);
+}
+
+.glow-btn__surface:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+
+.glow-btn__surface:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.glow-btn__label {
+  position: relative;
+}
+
+/* ---------------------------------------------------------------------------
+ * Agenda board (components/AgendaBoard.tsx)
+ *
+ * The lite=0 spatial agenda: a stage of 4 absolutely-positioned columns, one
+ * per track, shifted/scaled/blurred by their offset from whichever track is
+ * selected (see columnStyle() in the component — this file only owns the
+ * static parts of each layer, the transform/opacity/filter triple is set
+ * inline per-column since it depends on runtime state).
+ *
+ * The active column's session list is a real scrollable element with
+ * scroll-snap doing the centring; .agenda-board-spacer top/bottom elements
+ * are 50% of the scroll container's own height so the first and last cards
+ * can still reach the centre band. Cards are glass surfaces in the same
+ * color-mix + backdrop-filter style as .glow-btn__surface above, sized down
+ * for "previous/up next" and "far" (decorative, non-active-column) variants.
+ * ------------------------------------------------------------------------ */
+.agenda-board-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: min(60vh, 520px);
+  min-height: 400px;
+  perspective: 1600px;
+  /* The far (dist>=2) columns translate well past the stage's own edge —
+     invisible (opacity:0) but, being position:absolute, still contribute to
+     the page's scrollWidth without this.
+     `clip`, not `hidden`: `overflow: hidden` still makes an element a real
+     (if scrollbar-less) scroll container, and every `scrollIntoView()` call
+     on a session card inside it — the active column's own focus-centring,
+     the nav buttons, even the browser's default focus-scroll — walks up
+     through it and can nudge `stage.scrollLeft` off 0, which then drags
+     every column sideways by that same amount forever (nothing ever resets
+     it). `clip` gives the identical visual crop without ever becoming a
+     scroll target, so there's no scroll position for anything to disturb. */
+  overflow: clip;
+  /* The adjacent/far columns otherwise end at a crisp rectangular edge right
+     where the stage clips them — this fades that edge out instead, so a
+     column reads as receding into the background rather than getting cut
+     off. Alpha-only gradient (a mask, not a colour); the build adds the
+     -webkit- prefix to backdrop-filter itself but not to mask-image, so both
+     are written here. */
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* The left-hand hour ruler (AgendaBoard's `hours` list) — fixed-height rows
+ * (--ruler-row-h each) in a track that's free to run taller than the stage;
+ * the whole track is pinned at top:50% and shifted by AgendaBoard's inline
+ * translateY so the row for the currently-focused hour is centred exactly on
+ * the stage's own vertical middle — the same place the focused card always
+ * sits, since that's where the IntersectionObserver's centre band is. The
+ * clipping `.agenda-board-ruler` wrapper is what turns that shift into "the
+ * highlighted mark scrolls into the middle" rather than the list just moving
+ * behind a visible edge.
+ */
+.agenda-board-ruler {
+  --ruler-row-h: 2.75rem;
+  position: relative;
+  overflow: hidden;
+  width: 3.75rem;
+  height: min(60vh, 520px);
+  min-height: 400px;
+}
+
+/* Draggable/clickable: a grab cursor hints it, `touch-action: none` stops the
+   page itself from panning/scrolling under a drag that's being read as a
+   pointer gesture here instead. */
+.agenda-board-ruler--interactive {
+  cursor: grab;
+  touch-action: none;
+}
+
+.agenda-board-ruler--interactive:active {
+  cursor: grabbing;
+}
+
+.agenda-board-ruler__track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transition: transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.agenda-board-ruler__mark {
+  display: flex;
+  width: 100%;
+  height: var(--ruler-row-h);
+  align-items: center;
+  justify-content: flex-end;
+  /* Reset <button> defaults — this was a plain <span> until the ruler became
+     clickable/draggable. */
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--font-google-sans), sans-serif;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--paper) 35%, transparent);
+  cursor: inherit;
+  transition: color 300ms ease, font-size 300ms ease;
+}
+
+.agenda-board-ruler__mark--active {
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.agenda-board-nav {
+  align-self: center;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.agenda-board-column {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  /* Not a vw-based guess — 100%, capped, so this always matches the STAGE's
+     own actual flex-computed width (which already accounts for the ruler/
+     nav/gaps/page-padding taking their share of the row). A fixed vw
+     fraction here was computed independently of that and could exceed what
+     the stage actually had left on narrow screens, overlapping the nav
+     buttons beside it. */
+  width: 100%;
+  max-width: 380px;
+  height: 100%;
+  transition: transform 550ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 550ms ease, filter 550ms ease;
+  will-change: transform, opacity, filter;
+}
+
+.agenda-board-scroll {
+  /* Makes this the offsetParent for its own children (hour dividers, cards),
+     so AgendaBoard's centring math (`target.offsetTop`) reads directly
+     against this container instead of walking out to `.agenda-board-column`'s
+     own `position: absolute` — see the comment above centerCardInContainer()
+     in AgendaBoard.tsx for why that offset has to be unambiguous. */
+  position: relative;
+  height: 100%;
+  /* User-scrollable, vertically only: scrolling a wheel or dragging a finger
+     over the cards moves this track's own timeline a session at a time
+     (scroll-snap below does the centring), instead of scrolling the page past
+     the board. It used to be `hidden`, with the up/down buttons as the only
+     way to move — that was a deliberate decision at the time, reversed here
+     because scrolling the list is the gesture people actually reach for.
+
+     Two things keep that scroll from spilling outwards: `data-lenis-prevent`
+     on this element stops Lenis from taking the wheel over, and
+     `overscroll-behavior` stops the page from scrolling when the timeline
+     hits its start or end. `hidden`, not `auto`/`scroll`, on the bar: this
+     still takes scrollTo()/scrollTop from JS (the centring on track switch,
+     the nav buttons) while showing no scrollbar chrome. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  /* Same contract as the agenda block around it (see .agenda-track-swipe):
+     vertical pans belong to this list, horizontal ones to the track-switch
+     gesture — so a sideways drag starting on a card switches track instead
+     of doing nothing. */
+  touch-action: pan-y;
+}
+
+.agenda-board-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* No scroll-snap-type on purpose. Proximity snapping pulls the list back
+   toward a snap point mid-scroll, and every card that swaps size class as it
+   reaches the centre moves those points under the finger — that read as the
+   list fighting the scroll. AgendaBoard centres the nearest card itself once
+   scrolling has settled (see settleOnNearestCard). */
+
+.agenda-board-spacer {
+  height: 50%;
+}
+
+.agenda-board-hour {
+  padding-block: 0.5rem;
+  text-align: center;
+  font-family: var(--font-google-sans), sans-serif;
+  /* Deliberately not smaller. This was found back when these numerals were set
+     in the system monospace fallback (now Google Sans, like everything else):
+     tabular numerals rendered with a visible mid-glyph artifact below ~13px in
+     Chromium (confirmed by testing 11/12/13/14px directly; canvas-drawn text at
+     the same size was clean, so it was specific to the DOM text rendering path,
+     not a general "too small" readability call). Kept as a floor — text-sm
+     elsewhere in the agenda components sits above that threshold. */
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 45%, transparent);
+}
+
+.agenda-board-card {
+  /* `--t` is written per frame by TrackColumn's applyCardDepths(): 0 when the
+     card sits in the centre band, ~1 once it's a full card height away from
+     it. Everything it drives is compositor work (transform, opacity) so the
+     list can grow and shrink a card while it is being scrolled, without a
+     layout or a paint per frame. Background columns never get it set and so
+     read at 1 / 0, exactly as before. */
+  --t: 0;
+  position: relative;
+  isolation: isolate;
+  scroll-snap-align: center;
+  margin-block: 0.625rem;
+  border-radius: 1.75rem;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--paper) 12%, transparent);
+  transform: scale(calc(1 - 0.13 * var(--t)));
+  opacity: calc(1 - 0.5 * var(--t));
+  transform-origin: center;
+  /* Only the blur stays on a step (the adjacent/far classes below, with their
+     own transition): a blur radius changing every frame re-rasterises every
+     visible card, which is exactly the cost this board cannot afford on a
+     mid-range Android at a venue. Scale and opacity are continuous instead,
+     and they are what reads as "growing towards the centre". */
+  /* transform/opacity are rewritten every frame from --t, so they must not
+     also transition: a 150ms ease on top of a per-frame write is a lag that
+     makes the card trail the scroll. */
+  transition: filter 350ms ease;
+}
+
+/* Only with a hardware GPU compositing (see lib/gpu.ts) — a scroll-driven
+   transform on every card is pointless work for a software rasterizer, which
+   would rather repaint than composite. */
+html.gpu .agenda-board-card {
+  will-change: transform, opacity;
+}
+
+/* The focused card gets the site's signature neon ring — same conic-gradient
+ * + mask-exclude ring and rotating `--glow-angle` as .glow-btn (app/globals.css,
+ * "Glow button" block above) — so the one card the visitor is meant to read
+ * carries the same premium border the rest of the site uses for its primary
+ * controls. Reused rather than duplicated: this is genuinely the same ring,
+ * just traced around a rounded rect instead of a pill.
+ * Adjacent/far cards stay on the plain hairline border above — the ring is a
+ * "this one" signal, not decoration to spread across the whole list. */
+.agenda-board-card--focused {
+  border-color: transparent;
+  /* Only the focused card samples what is behind it. The neighbours are
+     blurred with `filter` already, and stacking backdrop-filter on a filtered
+     layer is the expensive, flickery combination. */
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--ink) 45%, transparent);
+  --glow-angle: 0deg;
+}
+
+/* A narrower card (see .agenda-board-column's width above) wraps its title
+   onto more lines, so it gets more vertical padding to match rather than
+   feeling cramped by the same spacing a wider desktop card uses. */
+@media (max-width: 639px) {
+  .agenda-board-card--focused {
+    padding-block: 2rem;
+  }
+}
+
+.agenda-board-card--focused::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--glow-angle), var(--red), var(--yellow), var(--green), var(--blue), var(--red));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .agenda-board-card--focused {
+    animation: glow-rotate 6s linear infinite;
+  }
+}
+
+/* Not just dimmer than the focused card — actually out of focus, same as the
+ * background tracks. The dimming itself is continuous (--t on
+ * .agenda-board-card); what these classes still own is the blur, stepped
+ * because it is the one expensive thing here (see the note there), plus the
+ * smaller geometry and the two-line preview content. */
+.agenda-board-card--adjacent {
+  padding: 0.875rem 1.25rem;
+  filter: blur(2px);
+}
+
+.agenda-board-card--far {
+  padding: 0.75rem 1rem;
+  filter: blur(3.5px);
+}
+
+.agenda-board-live-dot {
+  display: inline-block;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background: var(--red);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .agenda-board-live-dot {
+    animation: agenda-board-live-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes agenda-board-live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.agenda-board-pill--active .glow-btn__surface {
+  background: color-mix(in srgb, var(--paper) 22%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Agenda track tabs (components/AgendaTrackTabs.tsx)
+ *
+ * The track switcher, shared by both agenda variants: bold track titles on
+ * one row, the active one scaled up a little, and a brand-blue underline
+ * that slides from title to title. Replaced the old pill rows (the board's
+ * GlowButtons and the static list's rounded chips) — see the component's doc
+ * comment for the reasoning.
+ *
+ * The row is a horizontal scroll container on purpose: four bold titles plus
+ * "All" will not fit a phone at this size, and the swipe/trackpad gesture in
+ * lib/useTrackSwipe.ts only works well if the active title is reachable. The
+ * component scrolls the strip's own scrollLeft (never scrollIntoView, which
+ * would drag the page) and hides the scrollbar — it's still a real scroll
+ * container, so a trackpad's horizontal scroll moves it too.
+ *
+ * `margin-inline: auto` is the centring trick for a scroll container: auto
+ * margins resolve to zero once the content overflows, so a row that fits is
+ * centred and one that doesn't simply starts flush left and scrolls.
+ * `.agenda-track-tabs--center` opts back in for the board, whose stage is
+ * centred; the static list stays flush with its own list below.
+ * ------------------------------------------------------------------------ */
+.agenda-track-tabs {
+  overflow-x: auto;
+  /* Stop the browser's horizontal overscroll (Chrome's back gesture on some
+     platforms) from firing when someone flicks the end of the strip. */
+  overscroll-behavior-x: contain;
+  /* The important one: a horizontal touch drag starting on a tab has to reach
+     the swipe listener (which switches track) rather than scrolling this
+     strip sideways — which is what it did while the strip was an ordinary
+     scroll container. `pan-y` leaves the page's vertical scroll alone and
+     hands everything horizontal to lib/useTrackSwipe.ts. A trackpad's
+     horizontal wheel over the tabs is intercepted by that same listener. */
+  touch-action: pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.agenda-track-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.agenda-track-tabs__row {
+  position: relative;
+  display: flex;
+  width: max-content;
+  align-items: flex-end;
+  gap: 1.25rem;
+  /* Leaves room for the underline and the glow under it, so the row's own
+     height never changes when the active title scales up. */
+  padding-block: 0.25rem 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .agenda-track-tabs__row {
+    gap: 2rem;
+  }
+}
+
+.agenda-track-tabs--center .agenda-track-tabs__row {
+  margin-inline: auto;
+}
+
+.agenda-track-tabs__tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-google-sans), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 640px) {
+  .agenda-track-tabs__tab {
+    font-size: 1.125rem;
+  }
+}
+
+.agenda-track-tabs__tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.375rem;
+  border-radius: 0.5rem;
+}
+
+.agenda-track-tabs__label {
+  display: block;
+  color: color-mix(in srgb, var(--paper) 45%, transparent);
+  /* A scale, not a bigger font-size: scaling the label leaves every tab's box
+     — and therefore the row's height — identical, so nothing reflows as the
+     active title swaps and the underline always has the same strip to travel
+     along. Bottom-anchored so the baselines stay level across the row. */
+  transform: scale(1);
+  transform-origin: bottom center;
+}
+
+.agenda-track-tabs__tab:hover .agenda-track-tabs__label,
+.agenda-track-tabs__tab:focus-visible .agenda-track-tabs__label {
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.agenda-track-tabs__tab--active .agenda-track-tabs__label,
+.agenda-track-tabs__tab--active:hover .agenda-track-tabs__label,
+.agenda-track-tabs__tab--active:focus-visible .agenda-track-tabs__label {
+  color: var(--paper);
+  transform: scale(1.14);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .agenda-track-tabs__label {
+    transition: transform 400ms cubic-bezier(0.22, 0.61, 0.36, 1), color 300ms ease;
+  }
+}
+
+/* Written (width + translateX) by the component from the active tab's own
+   box, so it always spans exactly that title. No width or transform of its
+   own until then — and none is needed: the component places it in a layout
+   effect, before the first paint. */
+.agenda-track-tabs__underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 0.1875rem;
+  border-radius: 9999px;
+  background: var(--blue);
+  box-shadow: 0 0 0.75rem color-mix(in srgb, var(--blue) 65%, transparent);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .agenda-track-tabs__underline {
+    transition: transform 400ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      width 400ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+}
+
+/* The swipe surface — the whole agenda block, tabs AND cards. `pan-y` is the
+   whole trick: the browser keeps vertical panning (the page scroll, the track
+   column's own scroll, a trackpad) while everything horizontal is handed to
+   the gesture listener in lib/useTrackSwipe.ts, which switches track. Without
+   it a horizontal touch drag would be the browser's (overscroll/back) rather
+   than ours, and a horizontal wheel would scroll a nested strip sideways
+   instead of moving between tracks. */
+.agenda-track-swipe {
+  touch-action: pan-y;
+}
+
+/* ---------------------------------------------------------------------------
+ * Ticket selector (components/TicketSelector.tsx, /tickets/select)
+ *
+ * All fanned cards share one grid cell, so the stack's height is always
+ * exactly the tallest card in it — not a guessed fixed height that clips a
+ * taller tier once someone edits site.config.ts's `ticketSelector.tiers`.
+ * Each card's own offset transform (rotate/translate) is set inline per-tier
+ * in the component, since it depends on that tier's distance from whichever
+ * one is currently selected.
+ * ------------------------------------------------------------------------ */
+.ticket-fan {
+  display: grid;
+}
+
+.ticket-fan__card {
+  grid-area: 1 / 1;
+}
+
+/*
+ * Grid's own `align-items: stretch` (the default) already stretches each
+ * .ticket-fan__card to the tallest card's height — but that stretch stops
+ * there: .tilt-scene/.tilt-card (TiltCard's own wrappers, plain blocks with
+ * no height rule of their own) and .ticket-tier-card below them just size to
+ * their OWN content, not to the space they've been given. A shorter card
+ * (the placeholder in particular, whose __end is empty — see
+ * TicketPlaceholder in TicketSelector.tsx) then leaves a gap at the bottom
+ * of its own stretched .ticket-fan__card box, and since every card shares
+ * the same grid cell, that gap is exactly where a shorter-z-index card
+ * behind it (its "Buy ticket" button, say) shows through — worst on mobile,
+ * where __body's title/features and __end's price/button stack vertically
+ * instead of sitting side by side, so real tiers end up considerably taller
+ * than the placeholder. Scoped to `.ticket-fan__card` specifically (not a
+ * bare `.tilt-scene`/`.tilt-card` rule) so TiltCard's other, unrelated
+ * usages elsewhere (e.g. the homepage's TicketStub) are untouched.
+ */
+.ticket-fan__card .tilt-scene,
+.ticket-fan__card .tilt-card,
+.ticket-fan__card .ticket-tier-card {
+  height: 100%;
+}
+
+/*
+ * A brand-pastel paper ticket — same perforated-seam idea as .ticket-stub
+ * above (dashed seam + punched notches), but light and dark-ink, since this
+ * card sits on whichever `tier.color` pastel the config picks rather than
+ * the homepage's fixed dark glass.
+ */
+/*
+ * A pure layout wrapper now — no fill, border or radius of its own. Those
+ * all moved onto __body/__end individually (below): the Buy button's tear
+ * transition (useTicketTearTransition in TicketSelector.tsx) translates
+ * those two elements apart, and this wrapper used to clip anything that
+ * moved past its own bounds with `overflow: hidden` — the torn halves were
+ * animating correctly, just invisibly, the moment they crossed that edge.
+ * With no fill/clipping here, and each half fully self-painted, they're now
+ * genuinely independent pieces that happen to sit flush at rest.
+ */
+.ticket-tier-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * The stub as a real two-sided flip card (see useTicketTearTransition in
+ * TicketSelector.tsx): __end (the actual ticket content) is the front face,
+ * __end-back is a plain white panel behind it, and rotating this wrapper
+ * past 90° swaps which one `backface-visibility: hidden` shows. __end stays
+ * a normal in-flow child (so it still drives this wrapper's size, in both
+ * the row and stacked layouts) — only the back face needs `position:
+ * absolute`, sized to match via `inset: 0`.
+ */
+.ticket-tier-card__end-flip {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.ticket-tier-card__end-flip > .ticket-tier-card__end {
+  backface-visibility: hidden;
+}
+
+.ticket-tier-card__end-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: #fff;
+  border-radius: 0 0 1.5rem 1.5rem;
+  transform: rotateY(180deg);
+}
+
+@media (min-width: 640px) {
+  .ticket-tier-card__end-back {
+    border-radius: 0 1.5rem 1.5rem 0;
+  }
+}
+
+/*
+ * The empty state (components/TicketSelector.tsx's TicketPlaceholder) — a
+ * real bg-red-pastel ticket, same as any tier, just with a prompt where the
+ * details would be and nothing on the right. Its __end is empty (no price,
+ * no "Buy ticket" link) and __body holds only a short prompt, so without an
+ * explicit min-height it would collapse thinner than a real ticket — this
+ * keeps it sized to match so it sits in the fan as a plausible stand-in
+ * rather than a sliver.
+ */
+.ticket-tier-card__body--placeholder {
+  min-height: 16rem;
+}
+
+@media (min-width: 640px) {
+  .ticket-tier-card__body--placeholder {
+    min-height: 14rem;
+  }
+}
+
+/*
+ * Each half's own fill, border and shadow (see the .ticket-tier-card comment
+ * above for why this moved off the shared wrapper) — rounded only on its
+ * OUTER corners (top on mobile/__body, bottom on mobile/__end; left/right on
+ * desktop), square on the side that meets the perforation, so the two still
+ * read as one seamless ticket at rest despite being two independent boxes.
+ *
+ * `--tier-accent`, not a fixed `--blue`: TicketCard/TicketPlaceholder set it
+ * per-tier to that tier's own full-tone hue (e.g. `var(--yellow)` for the
+ * student tier), so the border always matches its own pastel fill rather
+ * than every tier defaulting to blue. The fallback only matters if some
+ * future caller forgets to set it. No drop shadow — the accent border is
+ * what's meant to read as this piece's edge, not a shadow underneath it.
+ */
+.ticket-tier-card__body,
+.ticket-tier-card__end {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--tier-accent, var(--blue));
+}
+
+.ticket-tier-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.75rem;
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+
+/*
+ * The torn seam — a row of small page-coloured circles "punched" through the
+ * ticket, not a single dashed line with two dots at the ends. Technique
+ * borrowed from a classic CSS ticket-tear demo: a `radial-gradient` repeated
+ * in one small tile reads as a real row of bite marks, which is what
+ * actually sells "torn ticket" — a plain border never did. `--page-bg`, not
+ * a solid color, so the notches read as holes to whatever's behind the
+ * ticket (the fanned cards behind it, or the black page), same principle as
+ * .ticket-stub's own perforation above.
+ *
+ * This element itself is a zero-size flex slot — __body and __end sit flush
+ * against each other with no gap between them, their own borders touching
+ * directly — and the dotted overlay is a pseudo-element straddling that
+ * exact seam (half into each side), so the perforation reads as punched
+ * THROUGH the shared border rather than living in a separate gutter between
+ * two visually detached pieces.
+ */
+.ticket-tier-card__perf {
+  position: relative;
+  flex: 0 0 0;
+}
+
+.ticket-tier-card__perf::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  left: 0;
+  right: 0;
+  top: -0.5rem;
+  height: 1rem;
+  background-image: radial-gradient(circle 3px at center, var(--page-bg) 99%, transparent 100%);
+  background-repeat: repeat-x;
+  background-size: 11px 100%;
+  background-position: center;
+}
+
+.ticket-tier-card__end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.75rem 1.75rem;
+  text-align: center;
+  border-radius: 0 0 1.5rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .ticket-tier-card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .ticket-tier-card__body {
+    border-radius: 1.5rem 0 0 1.5rem;
+  }
+
+  /*
+   * .ticket-tier-card's own `align-items: stretch` (above) stretches this
+   * wrapper's height to match __body, but a plain block child doesn't
+   * inherit that stretch onto ITS OWN child automatically — __end (the
+   * front face) was sizing to just its own content, shorter than __body,
+   * until this made end-flip a flex container too (align-items: stretch is
+   * the default), so __end fills the wrapper's already-stretched height.
+   * Mobile doesn't need this: __end already spans the full stacked width
+   * there via ordinary block layout, with no such wrapper level in the way.
+   */
+  .ticket-tier-card__end-flip {
+    display: flex;
+  }
+
+  .ticket-tier-card__perf::before {
+    left: -0.5rem;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: 1rem;
+    height: auto;
+    background-repeat: repeat-y;
+    background-size: 100% 11px;
+  }
+
+  .ticket-tier-card__end {
+    width: 14rem;
+    justify-content: center;
+    border-radius: 0 1.5rem 1.5rem 0;
+  }
+}
+
+/*
+ * The two site navs — the hamburger's header bar and lite mode's pill bar — both
+ * carry `.site-nav`. Scoped to that class, not the bare `header` element: the
+ * creators page has its own <header> that must not slide away with them.
+ */
+.site-nav {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, background-color 0.3s;
+}
+
+/* Gradient translucent blur header, clear at bottom and deeply frosted up top */
+.gradient-header {
+  border-bottom: none;
+}
+
+.gradient-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* --ink fading to 40% at the bottom. Theme tokens, not literals, so the bar
+     follows --theme like everything else instead of staying near-black. */
+  background: linear-gradient(to bottom, var(--ink) 65%, color-mix(in srgb, var(--ink) 40%, transparent) 100%);
+  /* Deep 20px blur. Standard property only — the build adds the -webkit- prefix
+     itself, and writing both by hand made it keep ONLY the prefixed one, which
+     Chrome and Firefox ignore (so the blur silently never applied there). */
+  backdrop-filter: blur(20px);
+  /* Progressive masking: fully frosted on top, fully clear and unblurred at the bottom
+     (alpha only — these stops are a mask, not a colour) */
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 60%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 60%, rgba(0, 0, 0, 0) 100%);
+  /* Border only on the background card, which fades out with the mask */
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 8%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Leaderboard rows (components/games/LeaderboardView.tsx)
+ *
+ * The leaderboard has no card and no dividers; the only ornaments are crisp 1.5px rings
+ * (the same padding + mask-exclude ring as .glow-btn, without its glow or halo). The top
+ * three get a gold / silver / bronze ring; the signed-in player's own row gets the site's
+ * four-colour rainbow one, which wins over a medal. `--lb-ring-bg` is the ring's paint,
+ * `--lb-text` the medal colour for the rank numeral.
+ * ------------------------------------------------------------------------ */
+.lb-ring {
+  position: relative;
+  --lb-ring-bg: linear-gradient(135deg, var(--paper), color-mix(in srgb, var(--paper) 45%, transparent));
+}
+
+.lb-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--lb-ring-bg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.lb-medal--gold {
+  --lb-ring-bg: linear-gradient(135deg, #fff3bf, var(--yellow) 45%, #9a6a00);
+  --lb-text: var(--yellow);
+}
+
+.lb-medal--silver {
+  --lb-ring-bg: linear-gradient(135deg, #ffffff, #b4bcc6 45%, #626a74);
+  --lb-text: #c4cbd3;
+}
+
+.lb-medal--bronze {
+  --lb-ring-bg: linear-gradient(135deg, #f6c79a, var(--bronze) 45%, #6d4013);
+  --lb-text: var(--bronze);
+}
+
+.lb-ring.lb-ring--you {
+  --lb-ring-bg: conic-gradient(from var(--glow-angle), var(--red), var(--yellow), var(--green), var(--blue), var(--red));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .lb-ring--you {
+    animation: glow-rotate 6s linear infinite;
+  }
+}
+
+/* Live cards: current/next share 3:1 space; very narrow phones stack the preview. */
+@media (min-width: 360px) and (max-width: 1023px) {
+  [data-hall-cards] article { display: grid; grid-template-columns: minmax(0,3fr) minmax(0,1fr); column-gap: 1rem; }
+  [data-hall-cards] article > :first-child { grid-column: 1 / -1; }
+  .hall-current { grid-column: 1; grid-row: 2; }
+  .hall-next { grid-column: 2; grid-row: 2; margin-top: 0; padding-top: 0; padding-left: .75rem; border-top: 0; border-left: 1px solid var(--color-paper); border-color: color-mix(in srgb, var(--paper) 10%, transparent); font-size: .75rem; overflow-wrap: anywhere; }
+  .hall-next button { font-size: .75rem; }
+  .hall-occupancy { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/*
+ * Partner logo marquee (components/PartnersMarquee.tsx). The track holds two
+ * identical halves, so sliding it left by exactly 50% loops seamlessly. Lite
+ * mode (and reduced-motion, which is lite by default) drops the animation and
+ * lets the first half wrap as a static, centred row; the second half is hidden.
+ */
+@keyframes partners-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.partners-marquee {
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+html.lite .partners-marquee {
+  mask-image: none;
+}
+.partners-track {
+  animation: partners-marquee 40s linear infinite;
+}
+.partners-marquee:hover .partners-track {
+  animation-play-state: paused;
+}
+html.lite .partners-track {
+  animation: none;
+  width: 100%;
+  justify-content: center;
+}
+html.lite .partners-track > ul {
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem 3rem;
+  padding: 0 1.5rem;
+}
+html.lite .partners-dupe {
+  display: none;
+}

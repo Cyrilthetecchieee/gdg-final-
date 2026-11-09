@@ -1,0 +1,318 @@
+/**
+ * Markdown variants of the site's pages, served at /md/* and reached at the
+ * canonical URL via content negotiation — a Cloudflare Transform Rule rewrites
+ * a request to `/md<path>` when `Accept: text/markdown` is present (see
+ * docs/markdown-negotiation.md). Built straight from the same content sources
+ * the React pages render from (site.config.ts, D1 via lib/content.ts) rather
+ * than by converting rendered HTML, since there's no reliable way to turn
+ * arbitrary JSX back into clean markdown.
+ */
+import { siteConfig, uiCopy, formatEventDate, shortEventDate } from "@/site.config";
+import { getAgenda, getArchivePhotos, getSpeaker, getSpeakers } from "@/lib/content";
+import { formatSessionTime } from "@/lib/format";
+import { AGENDA_READY, siteRoutes, unlistedPublicRoutes } from "@/lib/routes";
+import { absoluteUrl } from "@/lib/seo";
+import { partnership, ASSET_PENDING } from "@/lib/partnership";
+import { creators } from "@/lib/creators";
+import type { AgendaSession, Speaker } from "@/lib/schemas";
+import { findSpeakers, findTalksForSpeaker, joinSpeakerNames } from "@/lib/find-speaker";
+
+/** Direct `/md/*` URLs must not compete with the HTML canonical in Google. */
+export function markdownResponse(body: string, canonicalPath: string, status = 200) {
+  const canonical = canonicalPath === "/" ? siteConfig.url : `${siteConfig.url}${canonicalPath}`;
+  return new Response(body, {
+    status,
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      Vary: "Accept",
+      "X-Robots-Tag": "noindex, follow",
+      Link: `<${canonical}>; rel="canonical"`,
+    },
+  });
+}
+
+function frontMatter(title: string): string {
+  return `# ${title}\n\n> Machine-readable version of ${siteConfig.url}. See ${siteConfig.url}/llms.txt for a full site overview.\n\n`;
+}
+
+export function homeMarkdown(): string {
+  const lines = [
+    frontMatter(siteConfig.name),
+    `${siteConfig.tagline} — the flagship annual conference from ${siteConfig.chapter}.`,
+    "",
+    `- Date: ${formatEventDate(siteConfig.date)}`,
+    `- Venue: ${siteConfig.venue.name}, ${siteConfig.venue.line1}, ${siteConfig.venue.line2}`,
+    `- Tickets: ${siteConfig.url}${siteConfig.ticketing.href}`,
+    "",
+    "## Tracks",
+    "",
+    ...siteConfig.tracks.map((t) => `- **${t.name}**: ${t.description}`),
+    "",
+    "## Pages",
+    "",
+    // Every public page: the routed ones plus those kept off the nav (same list as the sitemap
+    // and /llms.txt), so the twin doesn't stop at Contact.
+    ...[...siteRoutes.filter((r) => !r.noIndex), ...unlistedPublicRoutes].map(
+      (r) => `- [${r.label}](${absoluteUrl(r.href)}): ${r.description}`,
+    ),
+  ];
+  return lines.join("\n") + "\n";
+}
+
+export async function agendaMarkdown(): Promise<string> {
+  if (!AGENDA_READY) {
+    return frontMatter("Agenda") + "The schedule is still being finalised. Check back closer to the event.\n";
+  }
+
+  const [agenda, speakers] = await Promise.all([getAgenda(), getSpeakers()]);
+  const byTrack = new Map<string | null, typeof agenda>();
+  for (const session of agenda) {
+    byTrack.set(session.track, [...(byTrack.get(session.track) ?? []), session]);
+  }
+
+  const lines = [frontMatter(`Agenda — ${siteConfig.name}`), `${formatEventDate(siteConfig.date)} · ${siteConfig.venue.name}`, ""];
+
+  function pushSessions(heading: string, sessions: typeof agenda | undefined) {
+    if (!sessions?.length) return;
+    lines.push(`## ${heading}`, "");
+    for (const session of sessions) {
+      const sessionSpeakers = findSpeakers(speakers, session.speakerSlugs);
+      const time = `${formatSessionTime(session.start)}–${formatSessionTime(session.end)}`;
+      // A single speaker's title/company fits on this line; more than one
+      // just lists the names, same as the agenda page does.
+      const by =
+        sessionSpeakers.length === 1
+          ? ` — ${sessionSpeakers[0].name}, ${sessionSpeakers[0].title} at ${sessionSpeakers[0].company}`
+          : sessionSpeakers.length > 1
+            ? ` — ${joinSpeakerNames(sessionSpeakers)}`
+            : "";
+      lines.push(`- **${time}** (${session.hall}) ${session.title}${by}`);
+    }
+    lines.push("");
+  }
+
+  // Venue-wide sessions (no single track, e.g. check-in) go first.
+  pushSessions("General", byTrack.get(null));
+  for (const track of siteConfig.tracks) {
+    pushSessions(track.name, byTrack.get(track.slug));
+  }
+
+  // Exactly one final newline, like every other twin (the trailing blank line above already
+  // produced one; this keeps it that way if the loop above changes).
+  return lines.join("\n").trimEnd() + "\n";
+}
+
+function speakerSummary(speaker: Speaker, agenda: AgendaSession[]): string {
+  const firstTalk = findTalksForSpeaker(agenda, speaker)[0];
+  const talk = firstTalk ? ` — speaking on "${firstTalk.title}"` : "";
+  return `- [${speaker.name}](${siteConfig.url}/speakers/${speaker.slug}), ${speaker.title} at ${speaker.company}${talk}`;
+}
+
+export async function speakersMarkdown(): Promise<string> {
+  const [speakers, agenda] = await Promise.all([getSpeakers(), getAgenda()]);
+  const lines = [frontMatter(`Speakers — ${siteConfig.name}`)];
+  if (!AGENDA_READY || speakers.length === 0) {
+    lines.push(
+      "The 2026 lineup is being finalised.",
+      "",
+      `Call for proposals: ${siteConfig.cfp.formUrl}`,
+    );
+  } else {
+    lines.push(...speakers.map((speaker) => speakerSummary(speaker, agenda)));
+  }
+  return lines.join("\n") + "\n";
+}
+
+export async function speakerMarkdown(slug: string): Promise<string | undefined> {
+  const speaker = await getSpeaker(slug);
+  if (!speaker) return undefined;
+  const agenda = await getAgenda();
+  const talks = findTalksForSpeaker(agenda, speaker);
+
+  const lines = [
+    frontMatter(speaker.name),
+    `${speaker.title} at ${speaker.company}`,
+    "",
+    speaker.bio,
+  ];
+
+  for (const talk of talks) {
+    lines.push("", `## Talk: ${talk.title}`, "", talk.description ?? "", "", `Track: ${talk.track}`);
+  }
+
+  const links = Object.entries(speaker.links).filter(([, url]) => url);
+  if (links.length) {
+    lines.push("", "## Links", "", ...links.map(([label, url]) => `- ${label}: ${url}`));
+  }
+
+  return lines.join("\n") + "\n";
+}
+
+export function ticketsMarkdown(): string {
+  const lines = [
+    frontMatter(`Tickets — ${siteConfig.name}`),
+    `The flagship day — ${formatEventDate(siteConfig.date)} at ${siteConfig.venue.name}.`,
+    "",
+    `Tickets are sold **exclusively through KonfHub**, from ${siteConfig.url}${siteConfig.ticketing.href}. There is no other authorised seller.`,
+    "",
+    "## Flagship tickets",
+    "",
+    ...siteConfig.ticketSelector.tickets.map((t) => {
+      const who = t.audience === "women-diverse" ? " — for women & diverse groups" : "";
+      return `- **${t.name}**${who}: ${t.currency}${t.price}. On sale ${shortEventDate(t.opens)} to ${shortEventDate(t.closes)}.`;
+    }),
+    "",
+    `${siteConfig.ticketSelector.taxNote}. ${siteConfig.ticketSelector.addOnsNote}.`,
+    "",
+    "## Community events",
+    "",
+    ...siteConfig.subEvents.map((e) => `- **${e.title}** (${shortEventDate(e.date)}): ${e.description}`),
+  ];
+  return lines.join("\n") + "\n";
+}
+
+/** `/creators`. Built from lib/creators.ts, the same copy the page renders. `**bold**` in that
+ *  copy is already Markdown. */
+export function creatorsMarkdown(): string {
+  const c = creators;
+  const lines = [
+    frontMatter(`${c.heading} — ${siteConfig.name}`),
+    `${c.eyebrow}: ${c.title} — ${c.tagline}`,
+    c.dateLine,
+    "",
+    ...c.intro.paragraphs.flatMap((paragraph) => [paragraph, ""]),
+    `**${c.intro.highlight}**`,
+    "",
+    `## ${c.why.heading}`,
+    "",
+    c.why.lede,
+    "",
+    ...c.why.questions.map((question) => `- ${question}`),
+    "",
+    c.why.closing,
+    "",
+    `## ${c.join.heading}`,
+    "",
+    `### ${c.join.joinUs.title}`,
+    "",
+    c.join.joinUs.body,
+    "",
+    `### ${c.join.lounge.title}`,
+    "",
+    c.join.lounge.body,
+    "",
+    c.join.lounge.listLabel,
+    "",
+    ...c.join.lounge.items.map((item) => `- ${item}`),
+    "",
+    `## ${c.together.heading}`,
+    "",
+    `**${c.together.highlight}**`,
+    "",
+    c.together.body,
+    "",
+    `## ${c.bigger.heading}`,
+    "",
+    `**${c.bigger.highlight}**`,
+    "",
+    c.bigger.body,
+    "",
+    `**${c.bigger.closer}**`,
+    "",
+    c.closing.body,
+    "",
+    `**${c.closing.heading}**`,
+    "",
+    `${c.closing.date} · ${c.closing.venue}`,
+    "",
+    ...c.closing.links.map((link) => `- [${link.label}](${link.href})`),
+  ];
+  return lines.join("\n") + "\n";
+}
+
+/** `/memories`. The archive by year, newest first — the same grouping the page's year grids use —
+ *  each photo with its title and description (which the page uses as alt text) and its file. */
+export async function memoriesMarkdown(): Promise<string> {
+  const photos = await getArchivePhotos();
+  const lines = [frontMatter(`${uiCopy.memoriesPage.heading} — ${siteConfig.name}`), uiCopy.memoriesPage.body, ""];
+  for (const year of [2025, 2024]) {
+    const inYear = photos.filter((photo) => photo.year === year);
+    if (inYear.length === 0) continue;
+    lines.push(`## ${year}`, "", ...inYear.map((photo) => `- [${photo.title}](${siteConfig.url}${photo.src}): ${photo.description}`), "");
+  }
+  lines.push(`The same data as JSON: ${siteConfig.url}/api/content/archive`);
+  return lines.join("\n") + "\n";
+}
+
+/** `/contact`. The page's own sentence and email, plus where each topic it names
+ *  (sponsorship, speaking, volunteering) and its description names (partnership, tickets)
+ *  actually goes. */
+export function contactMarkdown(): string {
+  const c = uiCopy.contactPage;
+  const lines = [
+    frontMatter(`${c.heading} — ${siteConfig.name}`),
+    `${c.bodyPrefix}${siteConfig.chapter}${c.bodySuffix}`,
+    "",
+    `- Email: ${siteConfig.contact.email}`,
+    "",
+    "## For something specific",
+    "",
+    `- Speaking: [Call for proposals](${siteConfig.cfp.formUrl})`,
+    `- Volunteering: [Volunteer sign-up](${siteConfig.volunteer.formUrl})`,
+    `- Sponsorship: [Sponsorship brochure (PDF)](${siteConfig.sponsorship.brochureUrl})`,
+    `- Partnership: [Community partnership](${siteConfig.url}/partner)`,
+    `- Tickets: [Tickets](${siteConfig.url}${siteConfig.ticketing.href})`,
+  ];
+  return lines.join("\n") + "\n";
+}
+
+export function partnerMarkdown(): string {
+  const p = partnership;
+  const lines = [frontMatter(`${p.heading} — ${siteConfig.name}`), p.lede, ""];
+
+  lines.push(`## ${p.what.heading}`, "", ...p.what.body.flatMap((para) => [para, ""]));
+
+  lines.push(`## ${p.why.heading}`, "", p.why.intro, "", ...p.why.points.map((pt) => `- ${pt}`), "", p.why.outro, "");
+
+  lines.push(`## ${p.asks.heading}`, "");
+  p.asks.items.forEach((item, i) => {
+    const note = "note" in item && item.note ? ` _(${item.note})_` : "";
+    lines.push(`${i + 1}. **${item.title}**${note} — ${item.body}`);
+    if ("points" in item && item.points) lines.push(...item.points.map((pt) => `   - ${pt}`));
+    if ("link" in item && item.link) lines.push(`   - [${item.link.label}](${item.link.href})`);
+    lines.push("");
+  });
+
+  lines.push(`## ${p.benefits.heading}`, "", ...p.benefits.items.map((b) => `- **${b.lead}** — ${b.detail}`), "");
+
+  lines.push(`## ${p.finePrint.heading}`, "", p.finePrint.intro, "", ...p.finePrint.points.map((pt) => `- ${pt}`), "");
+
+  lines.push(
+    `## ${p.timeline.heading}`,
+    "",
+    "| Activity | Window |",
+    "|---|---|",
+    ...p.timeline.rows.map((r) => `| ${r.activity} | ${r.window} |`),
+    "",
+    p.timeline.note,
+    "",
+  );
+
+  lines.push(
+    `## ${p.assets.heading}`,
+    "",
+    p.assets.intro,
+    "",
+    ...p.assets.items.map((a) => {
+      if (a.href && "linkText" in a && a.linkText) return `- **${a.label}**: [${a.linkText}](${a.href})`;
+      if (a.href) return `- [${a.label}](${a.href})`;
+      if ("text" in a && a.text) return `- **${a.label}**: ${a.text}`;
+      return `- **${a.label}**: ${ASSET_PENDING}`;
+    }),
+    "",
+  );
+
+  lines.push(`## ${p.contact.heading}`, "", `${p.contact.body} ${p.contact.email}`);
+
+  return lines.join("\n") + "\n";
+}

@@ -1,0 +1,15 @@
+# https://developers.cloudflare.com/workers/static-assets/headers
+# https://opennext.js.org/cloudflare/caching#static-assets-caching
+/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable
+
+# Immutable media. Resized variants are served by Cloudflare Images via
+# `/_next/image`; these headers cover the originals in /public.
+/archive/*
+  Cache-Control: public,max-age=31536000,immutable
+/banner/*
+  Cache-Control: public,max-age=31536000,immutable
+/fonts/*
+  Cache-Control: public,max-age=31536000,immutable
+/brand-shapes/*
+  Cache-Control: public,max-age=31536000,immutable

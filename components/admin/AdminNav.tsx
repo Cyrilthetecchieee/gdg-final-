@@ -1,0 +1,27 @@
+import Link from "next/link";
+
+const TABS = [
+  { href: "/admin", label: "Sessions" },
+  { href: "/admin/users", label: "People" },
+  { href: "/admin/halls", label: "Live halls" },
+] as const;
+
+export function AdminNav({ active, showPeople = false }: { active: "/admin" | "/admin/users" | "/admin/halls"; showPeople?: boolean }) {
+  return (
+    <nav className="flex gap-2">
+      {TABS.filter((tab) => showPeople || tab.href !== "/admin/users").map((tab) => (
+        <Link
+          key={tab.href}
+          href={tab.href}
+          className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+            active === tab.href
+              ? "border-paper bg-paper text-ink"
+              : "border-paper/20 text-paper/70 hover:border-paper/40"
+          }`}
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}

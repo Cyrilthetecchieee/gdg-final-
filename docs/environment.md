@@ -1,0 +1,224 @@
+# Environment variables
+
+Every configurable value the app reads from the environment. Nothing here is
+committed — `.env*` and `.dev.vars*` are git-ignored (`.env.example` and
+`.dev.vars.example` are the committed templates).
+
+## Which file: `.env.local` or `.dev.vars`?
+
+Both are standard, for different systems, and this project needs both because the
+code reads variables in two different ways:
+
+| File (template) | Standard for | Read by | Put here |
+| --- | --- | --- | --- |
+| `.env.local` (`.env.example`) | Next.js / dotenv | `process.env` | Build-time vars (`AGENDA_READY`, `HERO_BUTTONS`, `NEXT_PUBLIC_*`, PostHog) and the `AUTH_*` values (Auth.js reads `process.env`) |
+| `.dev.vars` (`.dev.vars.example`) | Cloudflare Wrangler | Cloudflare's `env` object (`getCloudflareContext().env`) | Anything the code reads that way: `GEMINI_API_KEY`, `GEMINI_MODEL` — and `AUTH_*` again for `npm run preview` |
+
+The catch: in `npm run dev` the Cloudflare `env` is filled by Wrangler from
+`.dev.vars` and deliberately **ignores `.env*` files**. So a variable that the code
+reads through `getCloudflareContext()` must be in `.dev.vars` even for `npm run dev`;
+putting it only in `.env.local` silently does nothing. (`AUTH_*` are the exception that
+needs both files, one per runtime.) In production neither file exists: build-time vars
+go in the build environment and secrets are set with `wrangler secret put`.
+
+## Where each one goes
+
+| Context | File | Vars it needs |
+| --- | --- | --- |
+| `npm run dev` (Next dev server) | `.env.local` **and** `.dev.vars` | `.env.local`: build-time vars + `AUTH_*` + `NEXT_PUBLIC_VAPID_PUBLIC_KEY`. `.dev.vars`: `GEMINI_*`, `VAPID_PRIVATE_KEY` |
+| `npm run deploy` / `npm run preview` build step (`next build`) | `.env.local` / `.env.production` / shell env | build-time vars only |
+| Cloudflare Workers runtime, local (`npm run preview`) | `.dev.vars` | `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `VAPID_PRIVATE_KEY`, optional `GEMINI_API_KEY` / `GEMINI_MODEL` / `ADMIN_EMAILS` |
+| Cloudflare Workers runtime, production | `wrangler secret put …` | `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `VAPID_PRIVATE_KEY`, optional `GEMINI_API_KEY` / `ADMIN_EMAILS` |
+| Git-triggered build (only if Cloudflare Workers Builds is connected) | dashboard → Worker → Settings → Build | `AGENDA_READY`, `HERO_BUTTONS`, optional PostHog overrides |
+
+Full deploy walkthrough: [`deployment.md`](./deployment.md).
+
+## The variables
+
+### `AGENDA_READY`
+- **Type:** build-time (re-exposed unprefixed via `next.config.ts` `env` so
+  client components can read it too)
+- **Used by:** [`lib/routes.ts`](../lib/routes.ts) → gates `/agenda`, `/speakers`,
+  `/speakers/[slug]`, the hero "See agenda" CTA, the 404 rescue grid, and the
+  `/md/agenda` + `/md/speakers` markdown twins
+- **Required:** no. Only `"true"` (exact string) enables the above; unset or any
+  other value keeps them returning 404.
+- **Example:** `AGENDA_READY=true`
+
+### `HERO_BUTTONS`
+- **Type:** build-time (re-exposed unprefixed via `next.config.ts` `env`, same
+  as `AGENDA_READY` — the hero CTA row is resolved in `HeroCopy.tsx`, which is
+  imported by client components)
+- **Used by:** [`components/motion/HeroCopy.tsx`](../components/motion/HeroCopy.tsx)
+  → filters the hero CTA row (`CurvedMarqueeHero` + `StaticHero`)
+- **Required:** no. Unset → all buttons show. Set to a comma-separated allow-list
+  from `tickets,cfp,volunteer,agenda` to trim/pick which appear. Order is fixed
+  in code, not taken from the value. `agenda` is additionally gated on
+  `AGENDA_READY` — naming it here does nothing while the agenda is off.
+- **Example:** `HERO_BUTTONS=tickets,cfp`
+
+### `AUTH_SECRET`
+- **Type:** runtime secret
+- **Used by:** Auth.js ([`auth.ts`](../auth.ts)) to sign/verify the JWT session
+  cookie
+- **Required:** yes, for sign-in. Generate with `openssl rand -base64 32`.
+  Rotating it logs everyone out.
+
+### `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`
+- **Type:** runtime secret
+- **Used by:** the Google provider in [`auth.ts`](../auth.ts)
+- **Required:** yes, for sign-in. From Google Cloud Console → APIs & Services →
+  Credentials → OAuth 2.0 Client ID (Web application).
+- **Authorised redirect URIs to register:**
+  - `http://localhost:3000/api/auth/callback/google`
+  - `https://devfest.gdgchennai.in/api/auth/callback/google` (prod — match
+    `siteConfig.url`)
+
+### `GEMINI_API_KEY` / `GEMINI_MODEL`
+- **Type:** runtime secret (`GEMINI_API_KEY`) / runtime variable (`GEMINI_MODEL`)
+- **Used by:** [`lib/typing-generator.ts`](../lib/typing-generator.ts), called when a
+  typing run starts — asks Gemini for the Speed Typer's paragraph
+- **Where locally:** `.dev.vars`, for both `npm run dev` and `npm run preview`. The
+  code reads it from Cloudflare's `env`, which `next dev` fills from `.dev.vars`, not
+  from `.env.local`.
+- **Required:** no. Without a key, or when Gemini errors or times out (3s), the
+  game silently uses its built-in word list.
+- **`GEMINI_MODEL`:** the model id, defaults to the constant in that file.
+  Models get retired and a stale id is just a 404 — the game falls back and
+  nobody notices — so check the Worker logs for
+  `Gemini paragraph unavailable` if generated text seems to have stopped.
+- **Abuse:** starting a run is unauthenticated and the typing text may call
+  Gemini. `POST /api/games/session` has a loose flood guard (1500/min per client — the
+  venue's wifi puts many attendees behind one IP) and a tighter Gemini budget
+  (10 typing texts/min per client; beyond that the local word list is used, not an
+  error). Both are best-effort and per Worker isolate. For a hard limit, add a
+  Cloudflare rate-limiting rule on `/api/games/session`.
+
+### `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
+- **Type:** `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is build-time, public (inlined into
+  the client bundle — it's not secret, the browser needs it to call
+  `PushManager.subscribe()`). `VAPID_PRIVATE_KEY` is a runtime secret.
+- **Used by:** [`components/push/PushSubscribeButton.tsx`](../components/push/PushSubscribeButton.tsx)
+  (public key, client-side) and [`lib/push.ts`](../lib/push.ts) (private key,
+  signs the VAPID JWT for each push via
+  [`@block65/webcrypto-web-push`](https://github.com/block65/webcrypto-web-push))
+- **Required:** no. Without `VAPID_PRIVATE_KEY`, `lib/push.ts` throws when a
+  send is attempted — subscribing still works (rows land in
+  `push_subscriptions`), but nothing can be sent until it's set. Without the
+  public key, the "Get notified" button on `/profile` no-ops.
+- **Generate a pair:**
+  ```
+  node -e "crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign']).then(async k=>{const pub=Buffer.from(await crypto.subtle.exportKey('raw',k.publicKey)).toString('base64url');const jwk=await crypto.subtle.exportKey('jwk',k.privateKey);console.log('NEXT_PUBLIC_VAPID_PUBLIC_KEY='+pub);console.log('VAPID_PRIVATE_KEY='+jwk.d)})"
+  ```
+  Put the public line in `.env.local`, the private line in `.dev.vars`
+  (`wrangler secret put VAPID_PRIVATE_KEY` in production — the public key for
+  prod is a normal build-time var, not a secret).
+- **Subject:** the VAPID `sub` claim is `mailto:${siteConfig.contact.email}` —
+  not a separate env var.
+
+### `ADMIN_EMAILS`
+- **Type:** runtime variable (not really a secret, but not public either —
+  belongs in `.dev.vars`/`wrangler secret put` like the others in this table)
+- **Used by:** [`lib/admin.ts`](../lib/admin.ts) — the bootstrap half of the
+  `/admin` access model (see [`docs/admin.md`](./admin.md)). These accounts
+  are the **super admins**: every track, and the only way to grant the first
+  track roles from `/admin/users`.
+- **Required:** no, but without it nobody can reach `/admin` on a fresh
+  deploy (there's no other way to grant the first role). Comma-separated,
+  case-insensitive, matched against the signed-in Google account's email.
+- **Example:** `ADMIN_EMAILS=you@example.com,teammate@example.com`
+
+### `NODE_ENV`
+- Set automatically by `next dev` / `next build` / Wrangler. Never set it by
+  hand. `next.config.ts` branches on it (dev-only `allowedDevOrigins`).
+
+### `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` / `NEXT_PUBLIC_POSTHOG_KEY`
+- **Type:** build-time, public (inlined into the client bundle)
+- **Used by:** [`instrumentation-client.ts`](../instrumentation-client.ts) —
+  `posthog-js` init. Either name works; `PROJECT_TOKEN` is what current
+  PostHog Next.js docs use, `KEY` is the older alias.
+- **Required:** no. Unset → the committed `siteConfig.analytics.posthogKey`.
+  Set this to point a preview/staging build at a different project.
+- **Example:** `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=phc_…`
+
+### `NEXT_PUBLIC_POSTHOG_HOST`
+- **Type:** build-time, public
+- **Used by:** `posthog-js` `api_host`, and `@posthog/nextjs-config` when
+  sourcemaps are uploaded
+- **Required:** no. Defaults to `https://us.i.posthog.com` (US cloud ingestion).
+  EU would be `https://eu.i.posthog.com`. This is the **ingestion** host, not
+  `https://us.posthog.com` (the app).
+
+### `POSTHOG_PERSONAL_API_KEY` / `POSTHOG_API_KEY`
+- **Type:** build-time secret (never `NEXT_PUBLIC_`)
+- **Used by:** [`next.config.ts`](../next.config.ts) `withPostHogConfig` —
+  uploads JS sourcemaps to PostHog Error Tracking during `next build`
+- **Required:** no. Without it the plugin is skipped and the site still
+  captures events; stack traces stay minified. Create a personal API key at
+  PostHog → Settings → Personal API keys with error-tracking write access
+  (`phx_…`, not the public `phc_…` project token).
+- **Not** a Worker runtime secret — `next build` reads it, Wrangler does not.
+
+### `POSTHOG_PROJECT_ID` / `POSTHOG_ENV_ID`
+- **Type:** build-time (not secret, but only useful with the personal API key)
+- **Used by:** `withPostHogConfig` `projectId` (`ENV_ID` is the older name)
+- **Required:** only when uploading sourcemaps. The GDG Chennai project id is
+  `593813`.
+
+## Not env vars, but related: Cloudflare bindings
+
+Configured in [`wrangler.jsonc`](../wrangler.jsonc), surfaced on `CloudflareEnv`
+(see [`cloudflare-env.d.ts`](../cloudflare-env.d.ts)), read via
+`getCloudflareContext()`:
+
+| Binding | What | Set up by |
+| --- | --- | --- |
+| `DB` | D1 — accounts, favorites, tickets, `push_subscriptions`, `session_status`, and `content_documents` (agenda / speakers / archive). Seed content with `npm run content:sync` | `wrangler d1 create devfest-chennai-2026`, then paste `database_id` |
+| `ASSETS` | static asset serving | OpenNext default |
+| `NEXT_INC_CACHE_R2_BUCKET` | ISR/incremental cache | `wrangler r2 bucket create devfest-chennai-2026-opennext-cache` |
+| `IMAGES` | Cloudflare image optimization | OpenNext default |
+| `WORKER_SELF_REFERENCE` | self-call for cache ops | OpenNext default |
+
+## Quick start (local dev)
+
+```bash
+cp .env.example .env.local
+# fill AUTH_SECRET (openssl rand -base64 32) + the two Google values
+npm run dev
+```
+
+`DB` is required for sign-in, saved sessions, and live content. Marketing
+pages fall back to `content/*.json` when D1 is empty (including `next build`).
+After applying migrations, run `npm run content:sync` so local/prod D1 match
+the JSON files.
+
+## Isolated hall preview
+
+`NEXT_PUBLIC_HALL_ISOLATED=1` is build-time only (`.env.example`); the `hall:build` script supplies it. It disables production analytics and unrelated auth/push/game effects while preserving the visual shell. Do not use it for a full-site deployment.
+
+`HALL_LOCAL_TEST=1` is a Cloudflare runtime flag (`.dev.vars.example`), supplied only by the separate local hall configs. Together with the isolated build and loopback Host it enables fixture identity cookies and a super-admin-controlled simulated IST clock for measurement age (event lifecycle is manual). Production configs must omit it. `HALL_LOAD_TEST=1` is a coordinator runtime flag supplied only by `workers/hall-live/wrangler.load.jsonc`; with local opt-in it raises the actor limiter for the reproducible 500-write load run. Neither flag should be set on a remote Worker.
+
+`HALL_CONTROL` and `HALL_PUBLIC` are service bindings, not secrets: private authenticated control and read-only public realtime service respectively. See [hall availability](hall-availability.md).
+
+### `NEXT_INC_CACHE_R2_PREFIX`
+
+- Runtime Cloudflare variable read by OpenNext's R2 incremental cache.
+- The availability branch sets `hall-availability-test` in `wrangler.jsonc`
+  (including hosted preview configuration). This keeps its cache separate from
+  the main site's default `incremental-cache` prefix in the existing R2 bucket.
+- Optional local override belongs in `.dev.vars`; no secret value is involved.
+
+### `HALL_LIVE_ENABLED`
+
+- Frontend Cloudflare runtime Text variable; missing/`true` enables Live and
+  `false` pauses it. Values are trimmed and case-insensitive.
+- Set in the frontend Worker's dashboard Variables and Secrets, then Deploy.
+  It is omitted from Wrangler `vars`; `keep_vars: true` preserves dashboard
+  emergency changes on later CLI deployments.
+- `/live` redirects temporarily to `/agenda`; new public hall sockets/snapshots
+  are rejected without contacting the backend. The status endpoint is
+  `/api/halls/availability`. Live navigation/content is hidden when paused.
+- Local override belongs in frontend `.dev.vars` (`.dev.vars.example`), using
+  the Worker preview. No Next.js rebuild is needed to toggle a deployed switch.
+- See [the emergency runbook](hall-emergency-switch.md) for existing-tab behavior,
+  the 20-second public connection fallback and Agenda prerequisites.

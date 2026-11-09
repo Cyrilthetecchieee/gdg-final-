@@ -1,0 +1,118 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": "workers/hall-live/gateway.ts",
+	"name": "devfest-hall-availability-test",
+	"account_id": "dbf439e411a3a8835d7880c3ff047b9e",
+	"compatibility_date": "2026-08-27",
+	// Availability branch deploys only to its own workers.dev hostname.
+	// The main branch owns devfest.gdgchennai.in.
+	"routes": [],
+	"workers_dev": true,
+	// Preserve dashboard emergency toggles on later CLI deployments.
+	"keep_vars": true,
+	// Preserve the existing dashboard monitoring settings on CLI deployments.
+	"observability": {
+		"enabled": true,
+		"issues": { "enabled": true },
+		"logs": { "enabled": true },
+		"traces": { "enabled": true }
+	},
+	"vars": {
+		"NEXT_INC_CACHE_R2_PREFIX": "hall-availability-test"
+	},
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Self-reference service binding, the service name must match the worker name
+			// see https://opennext.js.org/cloudflare/caching
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "devfest-hall-availability-test"
+		},
+		{
+			"binding": "HALL_CONTROL",
+			"service": "devfest-hall-live",
+			"entrypoint": "HallControl"
+		},
+		{
+			"binding": "HALL_PUBLIC",
+			"service": "devfest-hall-live"
+		}
+	],
+	"d1_databases": [
+		// Accounts + saved sessions. Create the DB and paste its id here:
+		//   npx wrangler d1 create devfest-chennai-2026
+		// then apply migrations locally and remotely:
+		//   npx wrangler d1 migrations apply devfest-chennai-2026 --local
+		//   npx wrangler d1 migrations apply devfest-chennai-2026 --remote
+		{
+			"binding": "DB",
+			"database_name": "devfest-chennai-2026",
+			"database_id": "7460097a-f29e-4c9d-95ac-fd6070d666d0",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		// Use R2 incremental cache
+		// See https://opennext.js.org/cloudflare/caching
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			// Create the bucket before deploying
+			// You can change the bucket name if you want
+			// See https://developers.cloudflare.com/workers/wrangler/commands/#r2-bucket-create
+			"bucket_name": "devfest-chennai-2026-opennext-cache"
+		}
+	],
+	"images": {
+		// Enable image optimization
+		// see https://opennext.js.org/cloudflare/howtos/image
+		"binding": "IMAGES"
+	},
+	"previews": {
+		"vars": {
+			"NEXT_INC_CACHE_R2_PREFIX": "hall-availability-test"
+		},
+		"services": [
+			{
+				"binding": "HALL_CONTROL",
+				"service": "devfest-hall-live",
+				"entrypoint": "HallControl"
+			},
+			{
+				"binding": "HALL_PUBLIC",
+				"service": "devfest-hall-live"
+			}
+		],
+		"d1_databases": [
+			{
+				"binding": "DB",
+				"database_id": "7460097a-f29e-4c9d-95ac-fd6070d666d0"
+			}
+		],
+		"images": {
+			"binding": "IMAGES"
+		},
+		"r2_buckets": [
+			{
+				"binding": "NEXT_INC_CACHE_R2_BUCKET",
+				"bucket_name": "devfest-chennai-2026-opennext-cache"
+			}
+		],
+		"unsafe": {
+			"bindings": [
+				{
+					"name": "WORKER_SELF_REFERENCE",
+					"type": "service",
+					"service": "devfest-hall-availability-test",
+					"environment": "production"
+				}
+			]
+		}
+	}
+}

@@ -1,0 +1,957 @@
+import { EVENT_TIME_ZONE } from "@/lib/format";
+
+export type Track = {
+  slug: string;
+  name: string;
+  description: string;
+};
+
+export type Floor = {
+  slug: string;
+  name: string;
+  /** Track slugs on this floor, in display order. */
+  tracks: string[];
+};
+
+export type TicketProfile = { key: string; label: string };
+
+export type Ticket = {
+  /** Stable slug — used as the React key and nowhere user-facing. */
+  id: string;
+  /** KonfHub's exact ticket name. */
+  name: string;
+  /** `profiles[].key` — "I'm a ___" on /tickets/select picks this. */
+  category: "professional" | "student";
+  /** `all` for the general ticket, `women-diverse` for the "for women & diverse
+   *  groups" ticket. Derived from the "and I identify as ___" pick. */
+  audience: "all" | "women-diverse";
+  price: number;
+  currency: string;
+  /** Sale window, ISO 8601 with the IST offset. This is the single source of
+   *  truth for whether the ticket shows in the /tickets/select picker: a
+   *  ticket is offered exactly when "now" falls within [opens, closes] (see
+   *  `isTicketOnSale`). Also shown on the card and in the Event JSON-LD. Keep
+   *  the windows for a given (category, audience) pair non-overlapping; if two
+   *  do overlap, the one earlier in `tickets` wins. */
+  opens: string;
+  closes: string;
+  /** Flip to `true` when a ticket sells out mid-window: the picker hides it and
+   *  moves on to the next tier for that (category, audience) pair — the soonest
+   *  one still to open, shown as "Coming soon", or the "not on sale" card if
+   *  there's nothing after it. Omit or set `false` while on sale. */
+  soldOut?: boolean;
+  /** The KonfHub widget URL "Buy ticket" opens in-page (see TicketCard's
+   *  checkout overlay). Same shared widget for now — swap in the real
+   *  per-ticket embed URLs as they arrive. */
+  href: string;
+};
+
+export type SubEvent = {
+  slug: string;
+  title: string;
+  /** Plain `YYYY-MM-DD`, same convention as `date` above — run through
+   *  `shortEventDate()` at render time (see TicketsList.tsx), not
+   *  pre-formatted here. It used to be a hand-typed display string ("Sep 5,
+   *  2026"), a different convention from the flagship card's date (which
+   *  goes through `shortEventDate` and read "17 October 2026") — two
+   *  formats on the same page for what's supposed to be the same kind of
+   *  data. One function producing both is what actually guarantees they
+   *  match, rather than two hardcoded strings that merely happened to look
+   *  similar. */
+  date: string;
+  description: string;
+  ctaLabel: string;
+  /** Omitted while the event has nowhere to send you yet (renders as a
+   *  disabled-looking button — see TicketsList's EventCta) — set once a real
+   *  RSVP/registration link exists. Always external so far (Luma, meetup.com,
+   *  etc.), same reasoning as `cfp.formUrl`/`volunteer.formUrl` below. */
+  href?: string;
+  /** A `public/`-relative path (e.g. "/events/kug-irl.webp"), same
+   *  convention as the shared venue shot it substitutes for — goes through
+   *  next/image exactly like every other image on the site (resized
+   *  by Cloudflare Images in production, see next.config.ts). Omitted while the event has no real photography yet —
+   *  TicketsList falls back to the shared venue shot in that case. */
+  image?: string;
+  /** The card's background — one of the four brand pastels, or the neutral
+   *  the flagship card uses. Omitted → TicketsList auto-cycles the pastels by
+   *  the card's position in this list. Constrained to these so a card can't
+   *  drift off-palette (see the "do not hand-mix new shades" note in
+   *  globals.css). */
+  color?: "bg-yellow-pastel" | "bg-blue-pastel" | "bg-red-pastel" | "bg-green-pastel" | "bg-neutral-200" | "bg-purple-pastel";
+};
+
+export const siteConfig = {
+  name: "DevFest Chennai 2026",
+  shortName: "DevFest Chennai",
+  chapter: "GDG Chennai",
+  tagline: "Chennai's biggest tech festival",
+
+  // Canonical origin, no trailing slash — feeds metadataBase/OpenGraph in
+  // app/layout.tsx, app/robots.ts, app/sitemap.ts, and the Event JSON-LD on
+  // the homepage. Single source of truth so a domain change is a one-line edit.
+  url: "https://devfest.gdgchennai.in",
+
+  analytics: {
+    // GA4 web stream measurement ID. Public by design (ships in every page's
+    // gtag snippet) — lives here with the other site-wide constants rather
+    // than an env var, so a property swap is a one-line edit and local
+    // `next dev` hits the same stream as production. Loaded from the root
+    // layout via `@next/third-parties/google`; conversion clicks are mapped
+    // in lib/analytics.ts.
+    measurementId: "G-JR8SW54DV9",
+    // PostHog project token (phc_…) — also public by design, same reason as
+    // the GA4 ID. `instrumentation-client.ts` inits posthog-js with this
+    // unless NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN / NEXT_PUBLIC_POSTHOG_KEY
+    // overrides it. Host is the US ingestion endpoint, not the app URL.
+    posthogKey: "phc_yaFKrEM2wngUPB5AwDPWk7NLWYrSUSTWoGMCauJxg8TB",
+    posthogHost: "https://us.i.posthog.com",
+    // Numeric project id — only needed by @posthog/nextjs-config sourcemap
+    // uploads (with a personal API key). Safe to commit; not a secret.
+    posthogProjectId: "593813",
+  },
+
+  /*
+   * THE event date. Change it here and it changes everywhere at once — the
+   * hero, the agenda header and the ticket stub all read this one field, and
+   * `null` puts every one of them back to "Date to be announced".
+   *
+   * Plain `YYYY-MM-DD`, deliberately: it is the easiest thing to edit
+   * correctly, and it is unambiguous because `formatEventDate` renders it in
+   * IST. A date-only string parses as UTC midnight, and IST is UTC+5:30, so
+   * it always lands on the same calendar day in Chennai.
+   *
+   * If you move this, move the session dates in content/agenda.json with it —
+   * they are the same day and nothing enforces that automatically.
+   */
+  date: "2026-10-17" as string | null,
+
+  venue: {
+    name: "IITM Research Park",
+    // Carried over from the 2025 site — confirm before publishing for real.
+    confirmed: true,
+    line1: "IITM Research Park, Kanagam Road",
+    line2: "Taramani, Chennai 600113",
+    mapUrl: "https://maps.google.com/?q=IIT+Madras+Research+Park+Taramani+Chennai",
+  },
+
+  capacityClaim: "1200+ enthusiasts", // e.g. "1500+ developers" — update with 2025's real number
+
+  ticketing: {
+    // Sold through our own /tickets page — no external ticketing platform.
+    // `ticketCta()` in lib/cta.ts always points here now, so every "Get
+    // Tickets" CTA site-wide (hero, header, ticket stub, 404 highlights,
+    // ShowMoodSection) lands on a real page rather than an unset external
+    // URL. The label stays here, not hardcoded in lib/cta.ts, so every
+    // editable piece of copy lives in one place (same reasoning as
+    // `subEvents` below).
+    href: "/tickets",
+    availableLabel: "Get Tickets →",
+  },
+
+  // The /tickets/select page's ticket picker. "I'm a ___" chooses the
+  // `category`; "and I identify as ___" maps to `audience` (Female / Non
+  // binary → the "women & diverse groups" ticket, Male / Prefer not to say →
+  // the general one). The card shown is the one entry matching that pair whose
+  // `opens`/`closes` window is currently open (see `isTicketOnSale`) — no hand
+  // flipping as sale windows change. Every price / date / checkout link lives
+  // here so the component never changes for a ticket edit.
+  ticketSelector: {
+    taxNote: "Taxes and payment gateway charges additional",
+    addOnsNote: "Add-ons sold separately",
+    profiles: [
+      { key: "professional", label: "Working Professional" },
+      { key: "student", label: "Student" },
+    ] satisfies TicketProfile[],
+    identities: ["Female", "Male", "Non binary", "Prefer not to say"],
+    /** What each ticket in a category gets you — shown on the card, since the
+     *  per-ticket rows below carry price/date but no feature list. */
+    perks: {
+      professional: ["Access to all talks", "Access to lounges", "Lunch and Snacks"],
+      student: ["Access to all talks", "Access to lounges", "Lunch and Snacks"],
+    } as Record<"professional" | "student", string[]>,
+    tickets: [
+      // ── Professionals ──────────────────────────────────────────────
+      {
+        id: "early-professional",
+        name: "Early Professional",
+        category: "professional",
+        audience: "all",
+        price: 600,
+        currency: "₹",
+        opens: "2026-09-01T11:11:00+05:30",
+        closes: "2026-09-05T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=false&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=118817&ticketId=118817%7C1"
+      },
+      {
+        id: "professional",
+        name: "Professional",
+        category: "professional",
+        audience: "all",
+        price: 800,
+        currency: "₹",
+        opens: "2026-09-06T00:00:00+05:30",
+        closes: "2026-10-02T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=true&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=118814&ticketId=118814%7C1",
+      },
+      {
+        id: "late-professional",
+        name: "Late Professional",
+        category: "professional",
+        audience: "all",
+        price: 1000,
+        currency: "₹",
+        opens: "2026-10-03T00:00:00+05:30",
+        closes: "2026-10-14T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=false&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=118813&ticketId=118813%7C1",
+      },
+      {
+        id: "professional-women-diverse",
+        name: "Late Professionals",
+        category: "professional",
+        audience: "women-diverse",
+        price: 1000,
+        currency: "₹",
+        opens: "2026-09-01T00:00:00+05:30",
+        closes: "2026-10-14T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=false&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=118813&ticketId=118813%7C0",
+      },
+      // ── Students ───────────────────────────────────────────────────
+      {
+        id: "early-student",
+        name: "Early Student",
+        category: "student",
+        audience: "all",
+        price: 400,
+        currency: "₹",
+        opens: "2026-08-28T00:00:00+05:30",
+        closes: "2026-09-05T23:59:00+05:30",
+        soldOut: true,
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=false&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=118816&ticketId=118816%7C1",
+      },
+      {
+        id: "student",
+        name: "Student",
+        category: "student",
+        audience: "all",
+        price: 600,
+        currency: "₹",
+        opens: "2026-09-13T00:00:00+05:30",
+        closes: "2026-10-02T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=true&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=quick&screen=2&tickets=118812&ticketId=118812%7C1",
+      },
+      {
+        id: "late-students",
+        name: "Late Students",
+        category: "student",
+        audience: "all",
+        price: 600,
+        currency: "₹",
+        opens: "2026-10-03T00:00:00+05:30",
+        closes: "2026-10-14T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=true&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=quick&screen=2&tickets=123010&ticketId=123010%7C1",
+      },
+      {
+        id: "student-women-diverse",
+        name: "Late Students",
+        category: "student",
+        audience: "women-diverse",
+        price: 600,
+        currency: "₹",
+        opens: "2026-09-01T00:00:00+05:30",
+        closes: "2026-10-14T23:59:00+05:30",
+        href: "https://konfhub.com/widget/devfest-2026-chennai?desc=false&secondaryBg=ffffff&ticketBg=ffffff&borderCl=ffffff&bg=c3ecf6&fontColor=1e1f24&ticketCl=1e1f24&btnColor=4285f4&fontFamily=Nunito&borderRadius=10&widget_type=standard&tickets=123010&ticketId=123010%7C1",
+      },
+    ] satisfies Ticket[],
+  },
+
+  agendaUrl: "/agenda",
+
+  tracks: [
+    {
+      slug: "d7-auditorium",
+      name: "Tech",
+      description: "General talks, the keynote, the panel, and the closing ceremony.",
+    },
+    {
+      slug: "d7-amphitheater",
+      name: "Deep tech",
+      description: "Deep tech talks.",
+    },
+    {
+      slug: "agent-wars",
+      name: "Agent Wars",
+      description: "Live tournament in D6 Multi-purpose Hall.",
+    },
+    {
+      slug: "lightning",
+      name: "Lightning Talks",
+      description: "15-minute lightning talks in D6 Multi-purpose Hall.",
+    },
+    {
+      slug: "vibe-coding",
+      name: "Vibe Lounge",
+      description: "Vibe Coding Challenge in D6 Multi-purpose Hall.",
+    },
+    {
+      slug: "raman-hall",
+      name: "Workshop",
+      description: "Workshops, the Qualcomm hardware session, and the Pitchathon in Raman Hall.",
+    },
+    {
+      slug: "creators-lounge",
+      name: "Creators Lounge",
+      description: "Creators Lounge in the D7 Pre-Function Area.",
+    },
+    {
+      slug: "meetup-lounge",
+      name: "Meetup Lounge",
+      description: "Meetup Lounge in the D7 Pre-Function Area.",
+    },
+  ] satisfies Track[],
+
+  // Which tracks run on which floor, in display order. The agenda reads this
+  // to order its tabs floor by floor and to label each session's floor next
+  // to its hall; every track slug above should appear exactly once.
+  floors: [
+    {
+      slug: "d7",
+      name: "D block 7th floor",
+      tracks: ["d7-auditorium", "d7-amphitheater", "creators-lounge", "meetup-lounge", "pitchathon"],
+    },
+    {
+      slug: "d6",
+      name: "D block 6th floor",
+      tracks: ["agent-wars", "vibe-coding", "lightning"],
+    },
+    {
+      slug: "e-ground",
+      name: "E block Ground floor",
+      tracks: ["raman-hall"],
+    },
+  ] satisfies Floor[],
+
+  // The community events feeding into the main festival, for the /tickets
+  // "Pick your event" page. Every field below — names, dates, copy, CTA
+  // labels — is a placeholder stand-in until the chapter finalises this
+  // year's satellite-event lineup; edit them here before publishing rather
+  // than hunting through components for hardcoded event copy.
+  //
+  // The flagship event itself (DevFest 2026) is NOT in this list — TicketsList
+  // builds that card from the `date`/`venue`/`ticketing` fields above plus
+  // ticketCta(), so its date and "Get tickets" link stay real instead of a
+  // copy here that can drift out of sync.
+  //
+  // Once a satellite's date is before the viewer's local day, its card stops
+  // offering RSVP and shows "See highlights" instead. A Google Drive `href`
+  // (drive.google.com) is the destination; anything else falls back to the
+  // shared Instagram highlights below.
+  pastEventHighlightsUrl:
+    "https://www.instagram.com/stories/highlights/18115203068060418/",
+  subEvents: [
+    {
+      slug: "united-by-ai",
+      title: "Life with Agents",
+      date: "2026-09-12",
+      description:
+        "Dive into the world of AI workflows, build, network and have fun.",
+      ctaLabel: "See highlights →",
+      href: "https://drive.google.com/drive/folders/1ibaQI0qqio_8l3eY49vCJRfFDIz_gs6Y",
+      image: "/banner/purple.webp",
+      color: "bg-purple-pastel",
+    },
+    {
+      slug: "ai-for-science",
+      title: "From Mind to Universe",
+      date: "2026-09-13",
+      description:
+        "Learn how AI impacts fields beyond tech. Explore how science is evolving with AI",
+      ctaLabel: "See highlights →",
+      href: "https://drive.google.com/drive/folders/1ebyTWq5a4OpT0Z9HzlQnY0PSW6UCWz3B",
+      image: "/banner/green.webp",
+      color: "bg-green-pastel",
+    },
+    {
+      slug: "react-chennai",
+      title: "Chennai React meetup",
+      date: "2026-09-19",
+      description:
+        "React in 2026: bigger, faster, still your favorite. Let's talk.",
+      ctaLabel: "See highlights →",
+      href: "https://drive.google.com/drive/folders/1Q7ugi4JWnYQwltE9TwRMNeLjoESMqRXC",
+      image: "/banner/blue.webp",
+      color: "bg-blue-pastel",
+    },
+    {
+      slug: "code-for-communities",
+      title: "Code for communities",
+      date: "2026-09-26",
+      description:
+        "Hackathon styled dev sprint. Build solutions for Resilience, Innovation, Sustainability and Cooperation.",
+      ctaLabel: "RSVP Now →",
+      href: "https://konfhub.com/checkout/devfest-roadshow-4-code-for-communities?ticketId=119793%7C1%3B",
+      image: "/banner/yellow.webp",
+      color: "bg-yellow-pastel",
+    },
+    {
+      slug: "data-day",
+      title: "All about Data",
+      date: "2026-09-26",
+      description:
+        "Unlock the full power of GCP's data ecosystem.",
+      ctaLabel: "RSVP Now →",
+      href: "https://luma.com/ppsswqcs",
+      image: "/banner/blue.webp",
+      color: "bg-blue-pastel",
+    },
+    {
+      slug: "mongo-grafana",
+      title: "AI in Action: RAG, Chatbots & Agents",
+      date: "2026-09-26",
+      description:
+        "Join us to learn building intelligent applications with Grafana and MongoDB",
+      ctaLabel: "RSVP Now →",
+      href: "https://www.meetup.com/mongodb-usergroup-chennai/events/316460911/",
+      image: "/banner/red.webp",
+      color: "bg-red-pastel",
+    },
+    {
+      slug: "ai-geeks",
+      title: "Agentic AI at Enterprise level",
+      date: "2026-09-26",
+      description:
+        "Get ready for an exciting day of AI, Cloud, Kubernetes and more!",
+      ctaLabel: "RSVP Now →",
+      href: "https://luma.com/24f2qo7d",
+      image: "/banner/green.webp",
+      color: "bg-green-pastel",
+    },
+    {
+      slug: "army-exclusive",
+      title: "Android and AI for the Indian Army",
+      date: "2026-10-03",
+      description:
+        "Enabling our protectors, protect their data.",
+      ctaLabel: "Not open to public",
+      image: "/banner/green.webp",
+      color: "bg-green-pastel",
+    },
+    {
+      slug: "hardware-labs",
+      title: "Hardware Labs",
+      date: "2026-10-03",
+      description:
+        "Get busy tinkering with hardware kits",
+      ctaLabel: "Coming soon →",
+      image: "/banner/red.webp",
+      color: "bg-red-pastel",
+    },
+    {
+      slug: "kug-irl",
+      title: "Shipaton - Kotlin Edition",
+      date: "2026-10-10",
+      description:
+        "A Kotlin Mini Hackathon by Kotlin User Group Chennai.",
+      ctaLabel: "RSVP Now →",
+      href: "https://luma.com/mprx0ocg",
+      image: "/banner/purple.webp",
+      color: "bg-purple-pastel",
+    },
+    {
+      slug: "devfest-on-campus",
+      title: "DevFest on Campus",
+      date: "2026-10-10",
+      description:
+        "Bringing the DevFest spirit to campus.",
+      ctaLabel: "RSVP Now →",
+      href: "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-on-campus-chennai/cohost-gdg-chennai/",
+      image: "/banner/on-campus.webp",
+      color: "bg-yellow-pastel",
+    },
+  ] satisfies SubEvent[],
+
+  whatYoullGet: [
+    {
+      title: "Roadshows", description: "Catch a DevFest Roadshow near you. A month long celebration hosted across the city.",
+      image: "/archive/2025-roadshow.webp"
+    },
+    {
+      title: "Build sessions", description: "Come, vibe, build, share your projects with an amazing audience.",
+      image: "/archive/2025-build.webp"
+    },
+    {
+      title: "Competitions", description: "Bring your A game to our favorite competitions ranging from pitchathons to CTFs.",
+      image: "/archive/2025-compete.webp"
+    },
+    {
+      title: "Talks", description: "Hear from some of the best minds out there as they talk about real stories and projects.",
+      image: "/archive/2025-full-house.webp"
+    },
+    {
+      title: "Networking", description: "Not your average social media connections. Real networking, projects, careers and collaborations.",
+      image: "/archive/2025-registration-desk.webp"
+    },
+    {
+      title: "Community", description: "Join us as we celebrate the community while you find your tribe here.",
+      image: "/archive/2025-group.webp"
+    },
+  ],
+
+  cfp: {
+    // Every "Submit CFP" CTA site-wide goes straight here, in a new tab —
+    // see speakerCta() in lib/cta.ts, which every consumer reads through.
+    // /cfp is not present in this app, but a Clouflare URL transformation rule
+    // Because its a Cloudflare route, don't update the form URL
+    formUrl: "https://devfest.gdgchennai.in/cfp",
+  },
+
+  volunteer: {
+    // Every "Become a volunteer" CTA site-wide goes straight here, in a new
+    // tab — see volunteerCta() in lib/cta.ts, which every consumer reads
+    // through. Same reasoning as `cfp.formUrl` above: no local /volunteer
+    // page to fall back to.
+    formUrl: "https://devfest.gdgchennai.in/cfv",
+  },
+
+  sponsorship: {
+    // The sponsorship brochure (a PDF). Like /cfp and /cfv above, /sponsors is not an
+    // app route: Cloudflare serves the file (a 200 application/pdf), so it is linked as a
+    // full URL and the rule that serves it lives in the dashboard, not this repo — see
+    // docs/deployment.md. Read by /llms.txt and the contact page's markdown twin.
+    brochureUrl: "https://devfest.gdgchennai.in/sponsors",
+  },
+
+  codeOfConduct: {
+    // No local /code-of-conduct page — every "Code of Conduct" link site-wide
+    // (the footer) goes straight to Google's own GDG Code of Conduct instead of
+    // a local copy that would need to be kept in sync with it by hand.
+    url: "https://developers.google.com/events/gdd-india/code-of-conduct",
+  },
+
+  // A Cloudflare redirect (301), not an app route — the Next app has no
+  // /privacy path. So it's linked as a full absolute URL (see the footer) and
+  // stays out of lib/routes.ts / the sitemap.
+  privacyPolicyUrl: "https://devfest.gdgchennai.in/privacy",
+
+  social: {
+    x: "https://x.com/gdgchennai",
+    linkedin: "https://www.linkedin.com/company/gdgchennai/",
+    instagram: "https://www.instagram.com/gdgchennai",
+    youtube: "https://www.youtube.com/@GDGCHENNAICOMMUNITY",
+    github: "https://github.com/gdgchennai",
+    discord: "https://discord.com/invite/eSyuFW3ywQ",
+  },
+
+  contact: {
+    email: "hello@gdgchennai.in",
+  },
+
+  // Header nav lived here as its own five-item list while the site had nine
+  // routes. It now comes from `navRoutes` in lib/routes.ts, which is the one
+  // list the 404's rescue grid reads too.
+
+  brandDisclaimer:
+    "DevFest Chennai is an independent, community-run event organised by GDG Chennai under Google's Community Guidelines. It is not produced or endorsed by Google.",
+} as const;
+
+// Sponsor tiers lived here until they were removed from the site ahead of a
+// rebuild. See the architecture doc for the 2025 structure — nothing else
+// referenced them.
+
+/**
+ * Every other piece of button/label/heading/body copy that isn't part of
+ * `siteConfig` above — page headings, aria-labels, button text, section
+ * copy. Before this existed, this was the last category of user-facing
+ * text still typed directly into JSX across app/ and components/, which
+ * meant a wording change meant grepping the whole tree instead of editing
+ * one file. Grouped by the component/page that reads it, in the same shape
+ * as that component's own props/locals, so a given file's section here
+ * reads like a copy of what it renders.
+ *
+ * A handful of strings that are the exact same words in more than one
+ * component live under `common` instead of being typed out twice (and, in
+ * the case of `getTicketsLabel`/`portraitAltPrefix`/`venueAlt`, a couple of
+ * these were ALREADY drifting apart before this existed — see their own
+ * comments below).
+ */
+export const uiCopy = {
+  common: {
+    /** Ticket Stub and Hero Copy both render this as "<chapter> presents". */
+    chapterPresents: `${siteConfig.chapter} presents`,
+    /** TicketStub and StaticHero's mono venue line both append this when
+     *  `siteConfig.venue.confirmed` is false. */
+    unconfirmedSuffix: " · unconfirmed",
+    /** TicketsList's flagship card and VenueReveal's static-baseline photo
+     *  both use this same alt text for the venue photo. */
+    venueAlt: `${siteConfig.venue.name}, the DevFest Chennai venue`,
+    /** The speaker-detail page, SpeakerWall and AgendaBoard's session card
+     *  all build a portrait's alt text as this prefix + the speaker's name. */
+    portraitAltPrefix: "Portrait of ",
+    /** CurvedMarqueeHero's and VenueReveal's "Get tickets" CTAs — kept as one
+     *  shared string specifically because these two had quietly drifted to
+     *  identical text independently; ShowMoodSection's own ticket CTA reads
+     *  differently ("← Get tickets", see showMoodSection below) and is not
+     *  this. */
+    getTicketsLabel: "Get tickets →",
+    skipToContent: "Skip to content",
+  },
+
+  /** X/Instagram/LinkedIn/YouTube/GitHub/Discord display names — shared by
+   *  Footer's site-wide social row (siteConfig.social) and the per-speaker
+   *  social links on the speaker detail page (speaker.links). */
+  socialLabels: {
+    x: "X",
+    instagram: "Instagram",
+    linkedin: "LinkedIn",
+    youtube: "YouTube",
+    github: "GitHub",
+    discord: "Discord",
+  },
+
+  header: {
+    navAriaLabel: "Primary",
+  },
+
+  hamburgerMenu: {
+    homeAriaLabel: "Go to homepage",
+    openAriaLabel: "Open menu",
+    closeAriaLabel: "Close menu",
+    panelAriaLabel: "Site menu",
+    cfpLabel: "Submit CFP",
+  },
+
+  footer: {
+    codeOfConductLabel: "Code of Conduct",
+    privacyPolicyLabel: "Privacy Policy",
+  },
+
+  footerLogo: {
+    alt: "DevFest Chennai",
+  },
+
+  errorPage: {
+    eyebrow: "Something went wrong",
+    heading: "This page hit an error.",
+    body: "The rest of the site is fine — retry this page, or head somewhere else.",
+    retryLabel: "Try again",
+    homeLabel: "Back home",
+  },
+
+  globalErrorPage: {
+    eyebrow: "Something went wrong",
+    heading: "DevFest Chennai hit an unexpected error.",
+    body: "Please try again in a moment.",
+    retryLabel: "Try again",
+  },
+
+  agendaPage: {
+    heading: "Agenda",
+  },
+
+  contactPage: {
+    heading: "Contact",
+    bodyPrefix:
+      "Questions about DevFest Chennai 2026 — sponsorship, speaking, volunteering, or anything else? Reach the ",
+    bodySuffix: " organising team directly.",
+  },
+
+  memoriesPage: {
+    heading: "Memories",
+    body: "Moments from DevFest Chennai 2024 and 2025.",
+  },
+
+  speakersPage: {
+    heading: "Speakers",
+    cfpOpenBody: "The 2026 lineup is being finalised. The call for proposals is how you get on it.",
+    moreToComeBody: "More speakers still to be announced.",
+  },
+
+  notFoundPage: {
+    statusLabel: "404",
+    heading: "Page not found.",
+    whatMostPeopleWantHeading: "What most people are looking for",
+    everywhereElseHeading: "Everywhere else on the site",
+    whileYoureHere: "While you're here",
+    archiveBlurb: "The 2024 and 2025 archive is the one part of this site that was never going to 404.",
+    closing: "Hope to see you at DevFest.",
+    highlights: {
+      agendaEyebrow: "The day",
+      agendaTitle: "Agenda",
+      agendaDescription: "A track for each stage and program. The full schedule as it firms up.",
+      ticketsEyebrow: "Get in",
+      ticketsDescription: "Book your place at DevFest Chennai 2026.",
+      speakingEyebrow: "Get on stage",
+      speakingTitle: "Speak at DevFest",
+      speakingDescription: "First-time speakers as welcome as conference regulars.",
+    },
+    recovery: {
+      fallbackPreviousPageLabel: "the previous page",
+      triedLabel: "tried",
+      suggestionFoundBody: "That address doesn't exist, but one very close to it does.",
+      nothingFoundBody:
+        "That link is either out of date or was never a page here — but you're in the right place. Here's what most people come for.",
+      goToPrefix: "Go to ",
+      backHomeLabel: "Back home",
+      backToPrefix: "← Back to ",
+    },
+  },
+
+  speakerWall: {
+    talksHeading: "Talks",
+  },
+
+  agendaBoard: {
+    previousSessionSr: "Previous session",
+    nextSessionSr: "Next session",
+    previousTrackSr: "Previous track",
+    nextTrackSr: "Next track",
+    previousEyebrow: "Previous",
+    upNextEyebrow: "Up next",
+    liveNowLabel: "Live now",
+  },
+
+  agenda: {
+    onNowLabel: "On now",
+  },
+
+  agendaTimeline: {
+    viewFullAgendaLabel: "View full agenda →",
+  },
+
+  agendaView: {
+    allTracksLabel: "All",
+    /** The name of the track tab strip itself, for screen readers — the tabs
+        are a real ARIA tablist (see components/AgendaTrackTabs.tsx). */
+    tracksAriaLabel: "Agenda tracks",
+    /** Manual override to the plain chronological list, in front of the
+     *  spatial 3D board — independent of (and in addition to) the global
+     *  lite toggle, which already forces this list for reduced-motion. */
+    simpleModeLabel: "Simple view",
+  },
+
+  ticketSelector: {
+    heading: "Get your tickets now",
+    imAPrompt: "I'm a",
+    identifyPrompt: "and I identify as",
+    buyTicketLabel: "Buy ticket",
+    comingSoonLabel: "Coming soon",
+    placeholderPrompt: "Pick your details above to find the right ticket",
+    /** Shown on an upcoming ticket's card in place of "On sale until …". */
+    onSaleFromPrefix: "On sale from",
+    /** The fallback card when a (category, audience) pair has no ticket on sale
+     *  now and none still to open — i.e. sales for that pair are over. */
+    notOnSalePrompt: "That ticket isn't on sale right now. Check back soon.",
+    closeCheckoutLabel: "Close checkout",
+  },
+
+  ticketStub: {
+    dateFieldLabel: "Date",
+    venueFieldLabel: "Venue",
+    tbaDate: "TBA",
+    admitOneLabel: "Admit one",
+  },
+
+  ticketsList: {
+    heading: "Pick your event",
+    flagshipDescriptionPrefix: "The flagship day — ",
+    flagshipDescriptionMiddle: "'s main event at ",
+    flagshipDescriptionSuffix: ".",
+    previousEventSr: "Previous event",
+    nextEventSr: "Next event",
+    mainEventLabel: "Main event",
+    seeHighlights: "See highlights →",
+  },
+
+  heroCopy: {
+    agendaLabel: "See Agenda →",
+    volunteerLabel: "Become volunteer →",
+    cfpLabel: "Submit CFP →",
+  },
+
+  liteToggle: {
+    label: "Lite version",
+    onLabel: "on",
+    offLabel: "off",
+  },
+
+  loader: {
+    introAriaSuffix: " intro",
+    readyStatus: "Ready.",
+    loadingStatusPrefix: "Loading ",
+    loadingStatusSuffix: "…",
+    enterCtaLabel: "Enter the DevFest experience →",
+    switchToLiteLabel: "I don't like animations →",
+    // Shown while the loader is still loading, once the load has been dragging
+    // (see SLOW_AFTER in useAssetsLoaded) or a slow connection / modest device
+    // is detected. Gone the moment the Enter CTA appears.
+    litePromptBody: "Taking a while? There's a lighter version.",
+    litePromptAcceptLabel: "Switch to lite →",
+    litePromptDismissLabel: "Keep waiting",
+  },
+
+  memoriesHallway: {
+    scrollHint: "Scroll",
+  },
+
+  scrollCue: {
+    nextCardLabel: "Next card",
+    previousCardLabel: "Previous card",
+    scrollToNextSectionLabel: "Scroll to next section",
+    previousSectionLabel: "Previous section",
+  },
+
+  expectShowcase: {
+    heading: "About DevFest",
+    previousCardSr: "Previous card",
+    nextCardSr: "Next card",
+  },
+
+  readySection: {
+    lines: ["Get ready to join the", "biggest tech festival.", "Hosted by GDG Chennai."],
+  },
+
+  moodSection: {
+    heading: "What's your DevFest vibe?",
+  },
+
+  sponsorsSection: {
+    heading: "Our sponsors",
+    // Add a sponsor by dropping its logo in public/sponsors/ (SVG or PNG, white/light
+    // on transparent — the section sits on black) and listing it under its tier.
+    // Tiers render in this order; a tier with no sponsors is skipped, and with no
+    // sponsors at all the whole section is hidden. `size` picks the logo height.
+    tiers: [
+      {
+        label: "Platinum",
+        size: "lg",
+        sponsors: [
+          {
+            name: "AGI Inc",
+            logo: "/sponsors/agi-inc.svg",
+            href: "https://theagi.company/?utm_source=gdgchennai&utm_medium=devfest",
+          },
+        ],
+      },
+      {
+        label: "Gold",
+        size: "md",
+        sponsors: [
+          {
+            name: "Qualcomm Developer",
+            logo: "/sponsors/qualcomm-developer.svg",
+            href: "https://www.qualcomm.com/developer?utm_medium=devfest&utm_source=gdgchennai",
+          },
+          {
+            name: "Poshmark",
+            logo: "/sponsors/poshmark.svg",
+            href: "https://poshmark.com/?utm_source=gdgchennai&utm_medium=devfest",
+          },
+        ],
+      },
+    ] as readonly {
+      label: string;
+      size: "lg" | "md" | "sm";
+      sponsors: readonly { name: string; logo: string; href?: string }[];
+    }[],
+  },
+
+  partnersMarquee: {
+    // Partner logos for the marquee above "See you there!". Drop white/light-on-
+    // transparent logos in public/partners/ and list them here; no entries = no
+    // marquee.
+    heading: "Community Partners",
+    items: [
+      { name: "AI for Science", logo: "/partners/ai-for-science.svg" },
+      { name: "AI Geeks", logo: "/partners/ai-geeks.svg" },
+      { name: "Chennai React", logo: "/partners/chennai-react.svg" },
+      { name: "GDG Cloud", logo: "/partners/gdg-cloud.svg" },
+      { name: "Grafana", logo: "/partners/grafana.svg" },
+      { name: "Kubernetes User Group", logo: "/partners/kug.svg" },
+      { name: "MongoDB", logo: "/partners/mongo.svg" },
+      { name: "UAI", logo: "/partners/uai.svg" },
+    ] as readonly { name: string; logo: string; href?: string }[],
+  },
+
+  seeYouThereSection: {
+    heading: "See you there!",
+    // `href` optional: a link without one stays an unwired placeholder (a no-op
+    // button — see SeeYouThereSection). "Become a Partner" points at the
+    // community partnership doc.
+    links: [
+      { label: "Join the conversation →", href: "https://chat.whatsapp.com/JROMzNJAaZ75CC6ybCdWel" },
+      { label: "Become a Partner →", href: "/partner" },
+    ] as readonly { label: string; href?: string }[],
+  },
+
+  showMoodSection: {
+    presentTitle: "Present",
+    presentBody:
+      "Got crazy ideas or you built something so cool. Vibe coding? Hard core engineering? Stunning Design? Leadership guides? Bring your main character energy to our stage. Share your wisdom with our vibrant community!",
+    attendTitle: "Attend",
+    attendBody:
+      "Join in for the premier DevFest experience. Meet like minded folks. Developer? PM? Designer? Product? Marketing? Management? Student? Find your tribe here! We provide you the space and technology. You build for and build with the community!",
+    cfpLinkLabel: "Submit CFP →",
+    ticketLinkLabel: "← Get tickets",
+  },
+
+  staticHero: {
+    switchToFullExperienceLabel: "Switch to the full experience →",
+  },
+
+  venueReveal: {
+    roadshowsText: "Roadshows and Meetups from Sep 12th onwards",
+    disclaimerText: "Note: Roadshow and meetup venues differ and tickets sold separately.",
+    locationHeading: "Location",
+    saveTheDateHeading: "Save the Date",
+    getDirectionsLabel: "Get directions →",
+  },
+} as const;
+
+/**
+ * Whether `ticket` is on sale at `now` — i.e. `now` falls within
+ * [opens, closes]. This is what decides which ticket the /tickets/select
+ * picker offers for a given (category, audience) pair, replacing the old
+ * hand-flipped `visible` flag. `now` defaults to the current time; callers
+ * that must stay hydration-stable pass an explicit value.
+ */
+export function isTicketOnSale(ticket: Ticket, now: Date | number = Date.now()): boolean {
+  const t = typeof now === "number" ? now : now.getTime();
+  return t >= Date.parse(ticket.opens) && t <= Date.parse(ticket.closes);
+}
+
+/**
+ * Whether `ticket`'s sale window is still entirely in the future at `now`.
+ * When nothing in a (category, audience) pair is on sale yet, the picker
+ * shows the soonest-opening such ticket with a "Coming soon" button instead
+ * of leaving the user on a dead end.
+ */
+export function isTicketUpcoming(ticket: Ticket, now: Date | number = Date.now()): boolean {
+  const t = typeof now === "number" ? now : now.getTime();
+  return t < Date.parse(ticket.opens);
+}
+
+export function formatEventDate(date: string | null): string {
+  if (!date) return "Date to be announced";
+  return new Date(date).toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    // Without this the build server's zone decides the day. Vercel builds in
+    // UTC, and any negative-offset zone renders a date-only string as the day
+    // before. See EVENT_TIME_ZONE.
+    timeZone: EVENT_TIME_ZONE,
+  });
+}
+
+/** "Oct 17, 2026" — abbreviated month, day, comma, year. en-US, not en-IN:
+ *  en-IN orders day before month with no comma ("17 Oct 2026"); en-US is
+ *  what actually produces this "Mon DD, YYYY" pattern. */
+export function shortEventDate(date: string | null): string {
+  if (!date) return "Date to be announced";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: EVENT_TIME_ZONE,
+  });
+}

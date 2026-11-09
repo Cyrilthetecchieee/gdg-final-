@@ -1,0 +1,942 @@
+"use client";
+
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import type { AgendaSession } from "@/lib/schemas";
+import type { Track } from "@/site.config";
+import { formatHourLabel, formatSessionTime, sessionHour } from "@/lib/format";
+import { trackColor } from "@/lib/track-color";
+import { useNow } from "@/lib/useNow";
+import { findSpeakers } from "@/lib/find-speaker";
+import type { Speaker } from "@/lib/schemas";
+import { Frame } from "@/components/Frame";
+import { GlowButton } from "@/components/GlowButton";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { SessionDescriptionModal } from "@/components/SessionDescriptionModal";
+import { AgendaTrackTabs } from "@/components/AgendaTrackTabs";
+import { useTrackSwipe } from "@/lib/useTrackSwipe";
+import { siteConfig, uiCopy } from "@/site.config";
+
+/**
+ * The lite=0 agenda experience: a tab strip of bold track titles above a
+ * "3D" stage where the chosen track's timeline sits centred and in focus
+ * while the other three recede into blurred, scaled-down columns behind it —
+ * see the plan this was built from (joyful-leaping-kite.md) for the reference
+ * image and reasoning.
+ *
+ * Deliberately CSS/DOM, not WebGL: every card is real text, the timeline is a
+ * real scrollable list (scroll-snap does the centring), and the depth is
+ * faked with transform/blur/opacity on plain divs. lib/motion-prefs.ts's
+ * shouldUseStaticBaseline() gate (in AgendaView) is what keeps this off
+ * reduced-motion/lite=1 visitors — this component assumes it's always safe
+ * to animate.
+ */
+
+type TimelineItem =
+  | { kind: "divider"; hour: string; key: string }
+  | { kind: "session"; session: AgendaSession; key: string };
+
+function buildTimeline(sessions: AgendaSession[]): TimelineItem[] {
+  const sorted = [...sessions].sort((a, b) => a.start.localeCompare(b.start));
+  const items: TimelineItem[] = [];
+  let lastHour: string | null = null;
+  for (const session of sorted) {
+    const hour = sessionHour(session.start);
+    if (hour !== lastHour) {
+      items.push({ kind: "divider", hour, key: `divider-${hour}` });
+      lastHour = hour;
+    }
+    items.push({ kind: "session", session, key: `${session.start}-${session.hall}` });
+  }
+  return items;
+}
+
+/** The track to spotlight when the URL doesn't name one: whatever's on now,
+ *  else whatever's next, else just the first track. `now` is null until
+ *  after mount (see useNow), so server and first paint always land on
+ *  tracks[0] — consistent on both sides, no hydration mismatch. */
+function defaultTrackSlug(sessions: AgendaSession[], tracks: Track[], now: Date | null): string {
+  if (tracks.length === 0) return "";
+  if (now) {
+    const current = sessions.find(
+      (s) => s.track !== null && now >= new Date(s.start) && now <= new Date(s.end),
+    );
+    if (current) return current.track!;
+    const next = [...sessions]
+      .filter((s) => s.track !== null && new Date(s.start) > now)
+      .sort((a, b) => a.start.localeCompare(b.start))[0];
+    if (next) return next.track!;
+  }
+  return tracks[0].slug;
+}
+
+function columnStyle(offset: number): CSSProperties {
+  const dist = Math.abs(offset);
+  const sign = Math.sign(offset);
+
+  if (dist === 0) {
+    return {
+      transform: "translateX(-50%) scale(1)",
+      filter: "none",
+      opacity: 1,
+      zIndex: 3,
+      pointerEvents: "auto",
+    };
+  }
+
+  if (dist === 1) {
+    return {
+      transform: `translateX(calc(-50% + ${sign * 102}%)) scale(0.78)`,
+      filter: "blur(5px)",
+      opacity: 0.45,
+      zIndex: 2,
+      pointerEvents: "none",
+    };
+  }
+
+  return {
+    transform: `translateX(calc(-50% + ${sign * 168}%)) scale(0.64)`,
+    filter: "blur(8px)",
+    opacity: 0,
+    zIndex: 1,
+    pointerEvents: "none",
+  };
+}
+
+export function AgendaBoard({
+  sessions,
+  speakers,
+  tracks,
+  activeTrack,
+  onSelectTrack,
+}: {
+  /** `tracks` is every track, already in floor order (see AgendaView). */
+  sessions: AgendaSession[];
+  speakers: Speaker[];
+  tracks: Track[];
+  activeTrack: string;
+  onSelectTrack: (slug: string) => void;
+}) {
+  const now = useNow();
+  const resolvedTrack = tracks.some((t) => t.slug === activeTrack)
+    ? activeTrack
+    : defaultTrackSlug(sessions, tracks, now);
+  const activeIndex = Math.max(0, tracks.findIndex((t) => t.slug === resolvedTrack));
+  const goToTrack = (index: number) => {
+    const target = tracks[index];
+    if (!target) return;
+    onSelectTrack(target.slug);
+  };
+  const [focusedSession, setFocusedSession] = useState<AgendaSession | null>(null);
+  // The session whose title was clicked — rendered as a popup below. Separate
+  // from `focusedSession` (which tracks whatever's centred on scroll): a far
+  // or adjacent card's title can't be clicked, only the focused one's, but
+  // the modal itself should stay open on whatever it was opened for even if
+  // the board keeps scrolling behind it.
+  const [descriptionSession, setDescriptionSession] = useState<AgendaSession | null>(null);
+  const columnRefs = useRef<Array<TrackColumnHandle | null>>([]);
+  // Keeps every background column moving in step with whichever column is
+  // active, instead of each catching up afterwards on its own — see the
+  // comment on TrackColumn's own scroll listener. Setting scrollTop
+  // imperatively here, outside React state, is deliberate: a column with
+  // fewer sessions just clamps at its own scroll bounds once it runs out —
+  // doing nothing more is exactly the "ok not to scroll" behaviour asked for.
+  const syncBackgroundScroll = useCallback(
+    (isoTime: string) => {
+      columnRefs.current.forEach((column, i) => {
+        if (i !== activeIndex) column?.goToTime(isoTime, "auto");
+      });
+    },
+    [activeIndex],
+  );
+
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  // Swipes and horizontal trackpad scrolls step between tracks — over the tab
+  // strip OR over the cards, which is why this listens on the whole board
+  // rather than just the stage (a swipe over the tabs must switch track, not
+  // scroll the strip). Same destination as clicking a tab; the tabs stay the
+  // mouse path (see useTrackSwipe).
+  useTrackSwipe({
+    nodeRef: boardRef,
+    count: tracks.length,
+    index: activeIndex,
+    onStep: (direction) => onSelectTrack(tracks[activeIndex + direction].slug),
+  });
+
+  const byTrack = useMemo(() => {
+    const map = new Map<string, TimelineItem[]>();
+    for (const t of tracks) {
+      // A null track is a venue-wide session (e.g. check-in): it has no column
+      // of its own, so it's folded into every track's timeline instead.
+      map.set(t.slug, buildTimeline(sessions.filter((s) => s.track === null || s.track === t.slug)));
+    }
+    return map;
+  }, [sessions, tracks]);
+
+  const activeItems = byTrack.get(resolvedTrack) ?? [];
+  const hours = activeItems.filter((it): it is Extract<TimelineItem, { kind: "divider" }> => it.kind === "divider");
+  const activeSessions = activeItems.filter(
+    (it): it is Extract<TimelineItem, { kind: "session" }> => it.kind === "session",
+  );
+  const focusedHour = focusedSession ? sessionHour(focusedSession.start) : null;
+  const focusedHourIndex = Math.max(
+    0,
+    hours.findIndex((h) => h.hour === focusedHour),
+  );
+  const focusedSessionPos = focusedSession
+    ? activeSessions.findIndex((it) => it.key === `${focusedSession.start}-${focusedSession.hall}`)
+    : -1;
+
+  // The start time of whichever session immediately follows each hour
+  // divider — what clicking or dragging to that row on the ruler jumps to.
+  // Plain arrays/functions, not memoized: `activeItems` is itself a fresh
+  // array every render (it's a .filter() of `byTrack`, not memoized either),
+  // so memoizing off it would never actually hit a cache.
+  const hourTimes: string[] = [];
+  activeItems.forEach((it, idx) => {
+    if (it.kind !== "divider") return;
+    const next = activeItems
+      .slice(idx + 1)
+      .find((x): x is Extract<TimelineItem, { kind: "session" }> => x.kind === "session");
+    hourTimes.push(next?.session.start ?? "");
+  });
+
+  const goToHourIndex = (index: number, behavior: ScrollBehavior) => {
+    const time = hourTimes[index];
+    if (!time) return;
+    columnRefs.current[activeIndex]?.goToTime(time, behavior);
+  };
+
+  // Dragging the ruler scrubs through the active track's own hours — one row
+  // of drag per hour, same unit the ruler's own translateY already moves in.
+  // Instant ("auto") while the pointer is down so it tracks the finger/cursor
+  // directly; the background columns and the ruler's own highlighted row both
+  // follow for free, since this lands on a real session the same way the
+  // up/down nav buttons do.
+  //
+  // Pointer capture only starts once the pointer has actually moved past a
+  // small threshold, not on the raw pointerdown — capturing immediately
+  // would swallow the subsequent pointerup/click on whichever <button> mark
+  // the gesture started on, so a plain click could never land. Below the
+  // threshold this stays a no-op and the button's own click handles it.
+  const DRAG_THRESHOLD_PX = 4;
+  const rulerDrag = useRef<{
+    pointerId: number;
+    startY: number;
+    startIndex: number;
+    rowPx: number;
+    dragging: boolean;
+  } | null>(null);
+
+  const handleRulerPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (hours.length === 0) return;
+    const rowPx = e.currentTarget.querySelector(".agenda-board-ruler__mark")?.getBoundingClientRect().height;
+    if (!rowPx) return;
+    rulerDrag.current = { pointerId: e.pointerId, startY: e.clientY, startIndex: focusedHourIndex, rowPx, dragging: false };
+  };
+
+  const handleRulerPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = rulerDrag.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    if (!drag.dragging) {
+      if (Math.abs(e.clientY - drag.startY) < DRAG_THRESHOLD_PX) return;
+      drag.dragging = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    // Dragging UP moves forward in time — it pulls later rows up into the
+    // centre, the same direction the ruler's own translateY moves them.
+    const deltaIndex = Math.round((drag.startY - e.clientY) / drag.rowPx);
+    const index = Math.min(Math.max(drag.startIndex + deltaIndex, 0), hours.length - 1);
+    goToHourIndex(index, "auto");
+  };
+
+  const endRulerDrag = () => {
+    rulerDrag.current = null;
+  };
+
+  return (
+    <div ref={boardRef} className="agenda-track-swipe mt-8">
+      {/* No "All" tab here: the board always has exactly one track in focus
+          (resolvedTrack above), and the other three are on screen behind it
+          getting on with being context. That's also why the active tab is
+          resolvedTrack rather than the raw activeTrack prop — with no
+          ?track= in the URL, the resolved track is still the one in focus. */}
+      <AgendaTrackTabs
+        tabs={tracks}
+        activeSlug={resolvedTrack}
+        onSelect={onSelectTrack}
+        idPrefix="agenda-board"
+        panelId="agenda-board-panel"
+        align="center"
+      />
+
+      <div
+        id="agenda-board-panel"
+        role="tabpanel"
+        aria-labelledby={`agenda-board-tab-${activeIndex}`}
+        className="mt-6 flex items-stretch justify-center gap-2 sm:gap-6"
+      >
+        <div
+          className="agenda-board-ruler agenda-board-ruler--interactive hidden sm:block"
+          onPointerDown={handleRulerPointerDown}
+          onPointerMove={handleRulerPointerMove}
+          onPointerUp={endRulerDrag}
+          onPointerCancel={endRulerDrag}
+        >
+          <div
+            className="agenda-board-ruler__track"
+            style={{ transform: `translateY(calc(-1 * (${focusedHourIndex} + 0.5) * var(--ruler-row-h)))` }}
+          >
+            {hours.map((h, i) => (
+              <button
+                key={h.key}
+                type="button"
+                onClick={() => goToHourIndex(i, "smooth")}
+                // Keeping focus off this button on a pointer click (keyboard
+                // activation still focuses it normally) is what stops the
+                // browser's own "scroll the newly focused element into view"
+                // from dragging the whole PAGE — see the long comment on
+                // centerCardInContainer for the same failure mode elsewhere.
+                onMouseDown={(e) => e.preventDefault()}
+                className={`agenda-board-ruler__mark ${h.hour === focusedHour ? "agenda-board-ruler__mark--active" : ""}`}
+              >
+                {formatHourLabel(h.hour)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="agenda-board-stage">
+          {tracks.map((t, i) => (
+            <TrackColumn
+              key={t.slug}
+              ref={(instance) => {
+                columnRefs.current[i] = instance;
+              }}
+              items={byTrack.get(t.slug) ?? []}
+              offset={i - activeIndex}
+              active={i === activeIndex}
+              now={now}
+              syncTime={focusedSession?.start ?? null}
+              speakers={speakers}
+              onFocusChange={setFocusedSession}
+              onActiveScroll={syncBackgroundScroll}
+              onTitleClick={setDescriptionSession}
+            />
+          ))}
+        </div>
+
+        <div className="agenda-board-nav">
+          <GlowButton
+            shape="circle"
+            size="sm"
+            onClick={() => columnRefs.current[activeIndex]?.goTo(-1)}
+            disabled={focusedSessionPos <= 0}
+          >
+            <span className="sr-only">{uiCopy.agendaBoard.previousSessionSr}</span>
+            <ChevronIcon direction="up" />
+          </GlowButton>
+          <GlowButton
+            shape="circle"
+            size="sm"
+            onClick={() => columnRefs.current[activeIndex]?.goTo(1)}
+            disabled={focusedSessionPos === -1 || focusedSessionPos >= activeSessions.length - 1}
+          >
+            <span className="sr-only">{uiCopy.agendaBoard.nextSessionSr}</span>
+            <ChevronIcon direction="down" />
+          </GlowButton>
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <GlowButton
+          shape="circle"
+          size="sm"
+          onClick={() => goToTrack(activeIndex - 1)}
+          disabled={activeIndex <= 0}
+        >
+          <span className="sr-only">{uiCopy.agendaBoard.previousTrackSr}</span>
+          <ChevronIcon direction="left" />
+        </GlowButton>
+        <GlowButton
+          shape="circle"
+          size="sm"
+          onClick={() => goToTrack(activeIndex + 1)}
+          disabled={activeIndex >= tracks.length - 1}
+        >
+          <span className="sr-only">{uiCopy.agendaBoard.nextTrackSr}</span>
+          <ChevronIcon direction="right" />
+        </GlowButton>
+      </div>
+
+      <SessionDescriptionModal
+        session={descriptionSession}
+        speakers={speakers}
+        onClose={() => setDescriptionSession(null)}
+      />
+    </div>
+  );
+}
+
+type TrackColumnHandle = {
+  goTo: (delta: number) => void;
+  /** Centres this column on whichever of its own sessions sits closest to
+   *  `isoTime`, in the given scroll behavior — `"auto"` (instant) for the
+   *  background sync and the ruler's live drag, `"smooth"` for a click. */
+  goToTime: (isoTime: string, behavior?: ScrollBehavior) => void;
+};
+
+/** The session in `items` whose start is closest to `targetIso` — used to
+ *  keep the blurred background columns pointed at roughly "the same time" as
+ *  whatever's focused in the active column, rather than frozen wherever they
+ *  first loaded. */
+/**
+ * Centres `target` inside `container` by setting `container`'s own scrollTop
+ * directly, instead of `target.scrollIntoView({ block: "center" })`.
+ *
+ * `scrollIntoView` walks every scrollable ancestor between the target and the
+ * viewport, not just the nearest one — and nothing between
+ * `.agenda-board-scroll` and `<body>` opts out the way `.agenda-board-stage`
+ * deliberately does (see its own `overflow: clip` comment), so it was also
+ * dragging the whole PAGE up to centre the focused card in the window,
+ * shoving the "Agenda" heading and track tabs off the top of the screen the
+ * moment a track was picked or the up/down nav buttons were used. Computing
+ * the container's own scrollTop directly here never touches `window.scrollY`
+ * at all, so the page stays put and only the track's own timeline moves.
+ */
+function centerCardInContainer(container: HTMLElement, target: HTMLElement, behavior: ScrollBehavior) {
+  const top = target.offsetTop - container.clientHeight / 2 + target.offsetHeight / 2;
+  container.scrollTo({ top, behavior });
+}
+
+function closestSessionByTime(
+  items: TimelineItem[],
+  targetIso: string,
+): Extract<TimelineItem, { kind: "session" }> | undefined {
+  const target = new Date(targetIso).getTime();
+  let best: Extract<TimelineItem, { kind: "session" }> | undefined;
+  let bestDiff = Infinity;
+  for (const it of items) {
+    if (it.kind !== "session") continue;
+    const diff = Math.abs(new Date(it.session.start).getTime() - target);
+    if (diff < bestDiff) {
+      best = it;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
+
+const TrackColumn = forwardRef<
+  TrackColumnHandle,
+  {
+    items: TimelineItem[];
+    offset: number;
+    active: boolean;
+    now: Date | null;
+    syncTime: string | null;
+    speakers: Speaker[];
+    onFocusChange: (session: AgendaSession | null) => void;
+    /** Only called while `active`: reports the start time of whichever of
+     *  this column's own sessions is nearest its centre right now, so every
+     *  other column can centre on the same moment. */
+    onActiveScroll: (isoTime: string) => void;
+    /** The focused card's title was clicked — open the description popup. */
+    onTitleClick: (session: AgendaSession) => void;
+  }
+>(function TrackColumn({ items, offset, active, now, syncTime, speakers, onFocusChange, onActiveScroll, onTitleClick }, ref) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
+  const depthRafRef = useRef(0);
+
+  /**
+   * Each card's distance from the centre band, written straight onto the
+   * card as `--t` (0 in the band, ~1 a full card height away — see
+   * .agenda-board-card). This is what makes a card visibly grow and brighten
+   * AS it is scrolled towards the middle, instead of only after it crosses
+   * the focus band and swaps size class. Deliberately imperative DOM writes
+   * on a rAF, not React state: this runs at scroll frequency, and no render
+   * is needed to move a compositor property.
+   *
+   * `offsetTop` (not getBoundingClientRect) — the scroll container is the
+   * cards' offsetParent (see .agenda-board-scroll), so one subtraction gives
+   * everything in the container's own coordinate frame without forcing a
+   * layout on the whole page.
+   */
+  const applyCardDepths = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const height = container.clientHeight;
+    if (height <= 0) return;
+    const mid = container.scrollTop + height / 2;
+    const cards = container.querySelectorAll<HTMLElement>(".agenda-board-card");
+    cards.forEach((card) => {
+      const cardHeight = card.offsetHeight;
+      if (cardHeight <= 0) return;
+      const center = card.offsetTop + cardHeight / 2;
+      // Normalised so the card a full container height away already reads as
+      // fully out (matches the adjacent/far fade), but a card still mostly
+      // on screen already starts growing back towards full size.
+      const t = Math.min(1, (Math.abs(center - mid) / height) * 1.6);
+      card.style.setProperty("--t", t.toFixed(3));
+    });
+  }, []);
+
+  // The session (among `items`) whose card centre sits closest to the
+  // container's own centre right now — found by measuring the DOM directly
+  // rather than waiting on the IntersectionObserver below, which only
+  // settles once scrolling stops. Querying on every scroll event is cheap
+  // enough at this list size (a few dozen cards at most).
+  const centeredSessionTime = useCallback(
+    (container: HTMLElement) => {
+      const keyed = new Map(
+        items
+          .filter((it): it is Extract<TimelineItem, { kind: "session" }> => it.kind === "session")
+          .map((it) => [it.key, it]),
+      );
+      const center = container.scrollTop + container.clientHeight / 2;
+      let best: string | null = null;
+      let bestDist = Infinity;
+      container.querySelectorAll<HTMLElement>(".agenda-board-card[data-key]").forEach((el) => {
+        const item = keyed.get(el.dataset.key ?? "");
+        if (!item) return;
+        const dist = Math.abs(el.offsetTop + el.offsetHeight / 2 - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = item.session.start;
+        }
+      });
+      return best;
+    },
+    [items],
+  );
+
+  // Read inside the activation effect below without adding syncTime to its
+  // dependency array — that effect should only re-pick a target when this
+  // column BECOMES active, not every time the focused time ticks along
+  // (that continuous following is the separate background-column effect
+  // further down). A ref gives the latest value without retriggering.
+  const syncTimeRef = useRef(syncTime);
+  useEffect(() => {
+    syncTimeRef.current = syncTime;
+  }, [syncTime]);
+
+  // Only the active column scrolls/observes/gets centred — the others are
+  // decorative depth cushioning (plan's "Background columns" section).
+  useEffect(() => {
+    if (!active) return;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // A short card (e.g. Lunch, wedged between two full talks) can still
+    // share the centre band with a taller neighbour once scrolled there —
+    // `entries` only reports WHICH cards' intersection state just changed,
+    // so naively taking "whichever changed last" landed focus one card off
+    // from wherever the scroll had actually settled. Tracking every
+    // currently-intersecting key and picking whichever is nearest the
+    // container's own centre (same distance check `centeredSessionTime`
+    // already uses for the background columns) is what actually matches
+    // the centred card.
+    const intersecting = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const key = (entry.target as HTMLElement).dataset.key;
+          if (!key) continue;
+          if (entry.isIntersecting) intersecting.add(key);
+          else intersecting.delete(key);
+        }
+        if (intersecting.size === 0) return;
+        const mid = container.scrollTop + container.clientHeight / 2;
+        let best: string | null = null;
+        let bestDist = Infinity;
+        intersecting.forEach((key) => {
+          const el = container.querySelector<HTMLElement>(`[data-key="${CSS.escape(key)}"]`);
+          if (!el) return;
+          const dist = Math.abs(el.offsetTop + el.offsetHeight / 2 - mid);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = key;
+          }
+        });
+        if (best) setFocusedKey(best);
+      },
+      { root: container, rootMargin: "-42% 0px -42% 0px", threshold: 0 },
+    );
+
+    // Only session cards are observed — a divider passing the centre band
+    // shouldn't steal focus, since "previous/up next"/the ruler highlight
+    // only make sense pointed at a real session.
+    const cards = container.querySelectorAll<HTMLElement>(".agenda-board-card[data-key]");
+    cards.forEach((el) => observer.observe(el));
+
+    // Landing target when this column becomes active: prefer wherever the
+    // visitor was already looking (syncTime — set once any column has ever
+    // focused a session), so switching tracks lands on "the same time" in
+    // the new track rather than resetting to its own start. Only the very
+    // first activation of the whole board, before syncTime exists yet, falls
+    // back to "on now, else the first session".
+    const bySyncTime = syncTimeRef.current ? closestSessionByTime(items, syncTimeRef.current) : undefined;
+    const nowItem = items.find(
+      (it): it is Extract<TimelineItem, { kind: "session" }> =>
+        it.kind === "session" && now !== null && now >= new Date(it.session.start) && now <= new Date(it.session.end),
+    );
+    const firstSession = items.find(
+      (it): it is Extract<TimelineItem, { kind: "session" }> => it.kind === "session",
+    );
+    const target = bySyncTime ?? nowItem ?? firstSession;
+    if (target) {
+      requestAnimationFrame(() => {
+        const el = container.querySelector<HTMLElement>(`[data-key="${target.key}"]`);
+        if (el) centerCardInContainer(container, el, "auto");
+        // Puts every background column at roughly the same position right
+        // away, rather than leaving them wherever they last loaded until the
+        // visitor's first scroll — the live listener below takes over from here.
+        onActiveScroll(target.session.start);
+        // The scroll nothing was pointing anywhere until the frame above, so
+        // place the depths against where it just landed — otherwise the new
+        // column paints one frame with every card at full size before the
+        // scroll listener below has anything to react to.
+        applyCardDepths();
+      });
+    }
+
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, items]);
+
+  // The active column is scrolled by the visitor (wheel, touch, the up/down
+  // buttons), so the card scale follows the scroll frame by frame: one rAF
+  // per scroll burst, coalescing whatever scroll events arrive between two
+  // frames. Background columns never run this — their `--t` stays unset and
+  // every card in them reads at full size, exactly as before.
+  useEffect(() => {
+    if (!active) return;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // Once the scroll has been quiet for a moment (and no finger is down),
+    // glide the nearest card to the centre. This replaces CSS scroll-snap,
+    // which fought the scroll while cards changed size under it.
+    let settleTimer = 0;
+    let touching = false;
+    function settleOnNearestCard() {
+      if (touching || !container) return;
+      const mid = container.scrollTop + container.clientHeight / 2;
+      let best: HTMLElement | null = null;
+      let bestDist = Infinity;
+      container.querySelectorAll<HTMLElement>(".agenda-board-card[data-key]").forEach((el) => {
+        const dist = Math.abs(el.offsetTop + el.offsetHeight / 2 - mid);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = el;
+        }
+      });
+      if (best && bestDist > 2) {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        centerCardInContainer(container, best, reduce ? "auto" : "smooth");
+      }
+    }
+    const onTouchStart = () => {
+      touching = true;
+      window.clearTimeout(settleTimer);
+    };
+    const onTouchEnd = () => {
+      touching = false;
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(settleOnNearestCard, 160);
+    };
+
+    function onScroll() {
+      window.clearTimeout(settleTimer);
+      if (!touching) settleTimer = window.setTimeout(settleOnNearestCard, 140);
+      if (depthRafRef.current) return;
+      depthRafRef.current = requestAnimationFrame(() => {
+        depthRafRef.current = 0;
+        applyCardDepths();
+      });
+    }
+
+    container.addEventListener("scroll", onScroll, { passive: true });
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchend", onTouchEnd, { passive: true });
+    container.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    window.addEventListener("resize", applyCardDepths);
+    applyCardDepths();
+    return () => {
+      window.clearTimeout(settleTimer);
+      container.removeEventListener("scroll", onScroll);
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchcancel", onTouchEnd);
+      window.removeEventListener("resize", applyCardDepths);
+      cancelAnimationFrame(depthRafRef.current);
+      depthRafRef.current = 0;
+      // Back to a background column: drop the depths so nothing remembers
+      // where it was being read.
+      container.querySelectorAll<HTMLElement>(".agenda-board-card").forEach((card) => {
+        card.style.removeProperty("--t");
+      });
+    };
+  }, [active, items, applyCardDepths]);
+
+  // The blurred background columns aren't scrolled by the visitor, so they'd
+  // otherwise just sit frozen wherever they last landed. Instead, while this
+  // column is active, every scroll event — whether a touch/wheel drag or a
+  // `goTo` button's smooth `scrollTo`, which also fires `scroll` continuously
+  // as it animates — re-centres every other column, in the same frame, on
+  // whichever of ITS OWN sessions is closest to the same moment this column
+  // is now centred on. That's what keeps the whole stage moving as one
+  // synchronised wall of tracks instead of each one catching up afterwards on
+  // its own timing. A column with fewer sessions simply stops moving once
+  // it's already centred on its closest match — it's fine for it to settle
+  // before the others do.
+  useEffect(() => {
+    if (!active) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const time = centeredSessionTime(container);
+      if (time) onActiveScroll(time);
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [active, onActiveScroll, centeredSessionTime]);
+
+  const focusedIndex = items.findIndex((it) => it.key === focusedKey);
+
+  useEffect(() => {
+    if (!active) return;
+    const focused = items[focusedIndex];
+    onFocusChange(focused && focused.kind === "session" ? focused.session : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, focusedIndex, items]);
+
+  const sessionItems = items.filter(
+    (it): it is Extract<TimelineItem, { kind: "session" }> => it.kind === "session",
+  );
+  const focusedSessionPos = sessionItems.findIndex((it) => it.key === focusedKey);
+
+  const goTo = useCallback(
+    (delta: number) => {
+      const container = scrollRef.current;
+      if (!container) return;
+      const targetPos = Math.min(Math.max(focusedSessionPos + delta, 0), sessionItems.length - 1);
+      const target = sessionItems[targetPos];
+      if (!target) return;
+      const el = container.querySelector<HTMLElement>(`[data-key="${target.key}"]`);
+      if (el) centerCardInContainer(container, el, "smooth");
+    },
+    [focusedSessionPos, sessionItems],
+  );
+
+  const goToTime = useCallback(
+    (isoTime: string, behavior: ScrollBehavior = "auto") => {
+      const container = scrollRef.current;
+      if (!container) return;
+      const target = closestSessionByTime(items, isoTime);
+      if (!target) return;
+      const el = container.querySelector<HTMLElement>(`[data-key="${target.key}"]`);
+      if (el) centerCardInContainer(container, el, behavior);
+    },
+    [items],
+  );
+
+  useImperativeHandle(ref, () => ({ goTo, goToTime }), [goTo, goToTime]);
+
+  return (
+    <div
+      className="agenda-board-column"
+      style={columnStyle(offset)}
+      aria-hidden={!active}
+    >
+      <div ref={scrollRef} className="agenda-board-scroll" data-lenis-prevent>
+        <div className="agenda-board-spacer" aria-hidden />
+        {items.map((item, idx) => {
+          if (item.kind === "divider") {
+            return (
+              <div key={item.key} className="agenda-board-hour">
+                {formatHourLabel(item.hour)}
+              </div>
+            );
+          }
+
+          const distance = active && focusedIndex !== -1 ? idx - focusedIndex : 0;
+          const isNow =
+            now !== null && now >= new Date(item.session.start) && now <= new Date(item.session.end);
+
+          return (
+            <SessionCard
+              key={item.key}
+              dataKey={item.key}
+              session={item.session}
+              distance={active ? distance : 0}
+              isNow={isNow}
+              speakers={speakers}
+              onTitleClick={onTitleClick}
+            />
+          );
+        })}
+        <div className="agenda-board-spacer" aria-hidden />
+      </div>
+    </div>
+  );
+});
+
+const CHEVRON_PATHS = {
+  up: "M6 15l6-6 6 6",
+  down: "M6 9l6 6 6-6",
+  left: "M15 6l-6 6 6 6",
+  right: "M9 6l6 6-6 6",
+} as const;
+
+function ChevronIcon({ direction }: { direction: keyof typeof CHEVRON_PATHS }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden>
+      <path
+        d={CHEVRON_PATHS[direction]}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SessionCard({
+  session,
+  dataKey,
+  distance,
+  isNow,
+  speakers,
+  onTitleClick,
+}: {
+  session: AgendaSession;
+  dataKey: string;
+  distance: number;
+  isNow: boolean;
+  speakers: Speaker[];
+  onTitleClick: (session: AgendaSession) => void;
+}) {
+  const abs = Math.abs(distance);
+
+  if (abs >= 2) {
+    return (
+      <div className="agenda-board-card agenda-board-card--far" data-key={dataKey}>
+        {/* text-sm, not smaller — see the comment on .agenda-board-hour in
+            globals.css for why tabular-nums numerals need to stay above ~13px. */}
+        <span className="text-sm tabular-nums text-paper/40">{formatSessionTime(session.start)}</span>
+        <p className="mt-1 truncate text-sm text-paper/50">{session.title}</p>
+      </div>
+    );
+  }
+
+  if (abs === 1) {
+    const eyebrow = distance < 0 ? uiCopy.agendaBoard.previousEyebrow : uiCopy.agendaBoard.upNextEyebrow;
+    return (
+      <div className="agenda-board-card agenda-board-card--adjacent" data-key={dataKey}>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[0.6875rem] uppercase tracking-wide text-paper/50">{eyebrow}</span>
+          <span className="text-sm tabular-nums text-paper/50">{formatSessionTime(session.start)}</span>
+        </div>
+        <p className="mt-1 truncate text-sm text-paper/80">{session.title}</p>
+      </div>
+    );
+  }
+
+  const color = trackColor(session.track);
+  const sessionSpeakers = findSpeakers(speakers, session.speakerSlugs);
+  const trackName = session.track ? (siteConfig.tracks.find((t) => t.slug === session.track)?.name ?? session.track) : null;
+  // If a track's own name ever matches its hall name, showing both the pill
+  // and the hall label in the corner would be the same word twice — the
+  // session's type (workshop, talk, competition) is a more useful pill in
+  // that case, so that's the one case this falls back to it.
+  const pillLabel = trackName === session.hall ? session.type : trackName;
+  // Ceremonial/administrative slots (check-in, meals, breaks, the welcome
+  // note, the keynote, closing) aren't really "on" a track — no pill for
+  // those, in any hall.
+  const showPill = trackName !== null && session.type !== "break" && session.type !== "keynote";
+
+  return (
+    <div className="agenda-board-card agenda-board-card--focused" data-key={dataKey}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {showPill && (
+            <span className={`rounded-full px-3 py-1 text-[0.6875rem] uppercase tracking-wide text-ink ${color.bg}`}>
+              {pillLabel}
+            </span>
+          )}
+          {session.level && (
+            <span className="rounded-full border border-paper/30 px-3 py-1 text-[0.6875rem] uppercase tracking-wide text-paper/80">
+              {session.level}
+            </span>
+          )}
+          {isNow && (
+            <span className="flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-wide text-paper/70">
+              <span className="agenda-board-live-dot" aria-hidden />
+              {uiCopy.agendaBoard.liveNowLabel}
+            </span>
+          )}
+        </div>
+        <span className="text-sm tabular-nums text-paper/70">
+          {/* A plain hyphen, not an en dash: en dash + tabular-nums renders with a
+              spurious horizontal line through the whole string specifically when
+              inside this stage's transformed/scrolling/blurred ancestor chain —
+              reproduced by isolating the exact same span outside that tree, where
+              the en dash rendered fine. Root cause is a Chromium text-rendering
+              interaction, not something fixable from this component; sidestepping
+              the glyph is the reliable fix, and it matches the reference image's
+              own "14:00 - 15:00" styling anyway. */}
+          {formatSessionTime(session.start)} - {formatSessionTime(session.end)}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onTitleClick(session)}
+        className="mt-4 block text-left text-base font-semibold leading-tight underline-offset-4 hover:underline sm:text-lg"
+      >
+        {session.title}
+      </button>
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        {sessionSpeakers.length > 0 ? (
+          // One portrait per co-presenter, spaced apart (not overlapping) —
+          // names aren't shown here — clicking the title opens the
+          // description modal, which names each speaker next to their own
+          // portrait.
+          <div className="flex shrink-0 gap-2">
+            {sessionSpeakers.map((speaker) => (
+              <div key={speaker.slug} className="h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-ink">
+                <Frame
+                  src={speaker.photo}
+                  alt={`${uiCopy.common.portraitAltPrefix}${speaker.name}`}
+                  title={speaker.name}
+                  aspectRatio="1 / 1"
+                  sizes="36px"
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-3">
+          <span className="text-xs uppercase tracking-wide text-paper/50">{session.hall}</span>
+          {session.type !== "break" && <FavoriteButton session={session} />}
+        </div>
+      </div>
+    </div>
+  );
+}

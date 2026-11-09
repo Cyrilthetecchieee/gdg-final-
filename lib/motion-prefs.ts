@@ -1,0 +1,178 @@
+export const LITE_STORAGE_KEY = "devfest-lite";
+export const INTRO_SEEN_KEY = "devfest-intro-seen";
+
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * `?lite=1` turns it on, `?lite=0` turns it off, and either way the answer is
+ * remembered ("1" / "0"). Both directions matter: the toggle drives the
+ * preference through the URL so the choice is linkable, bookmarkable and
+ * testable — "open the site the way I see it" has to be something a visitor can
+ * send to someone else, and `?lite=0` is the only way back out of a stored
+ * preference on a shared machine.
+ *
+ * With nothing stored, lite follows `prefers-reduced-motion`: those visitors
+ * land in lite automatically (static hero, pill nav, no 3D). A stored "0" is an
+ * explicit opt-out and beats that default, which is why opting out writes "0"
+ * instead of just forgetting the preference.
+ *
+ * NOTE: this persists as a side effect of being read. Harmless (it writes the
+ * same value every time) but it is why the pre-paint script in app/layout.tsx
+ * inlines the same two rules rather than calling this — that script has to run
+ * before any module loads. Change one, change the other.
+ */
+export function isLiteMode(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  const param = params.get("lite");
+  if (param === "1") {
+    window.localStorage.setItem(LITE_STORAGE_KEY, "1");
+    return true;
+  }
+  if (param === "0") {
+    optOutOfLiteMode();
+    return false;
+  }
+  const stored = window.localStorage.getItem(LITE_STORAGE_KEY);
+  if (stored === "1") return true;
+  if (stored === "0") return false;
+  return prefersReducedMotion();
+}
+
+/** The one place that records an explicit "no lite" choice — "0", not a
+ *  removed key, so it still wins over the reduced-motion default. */
+export function optOutOfLiteMode(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(LITE_STORAGE_KEY, "0");
+}
+
+type Listener = () => void;
+const liteModeListeners = new Set<Listener>();
+
+/**
+ * `isLiteMode()` (and everything built on it — `shouldUseStaticBaseline`,
+ * `shouldSkipHeavyAssets`) is read all over the site through `useClientValue`,
+ * whose store deliberately never notifies (see its own doc comment) — the
+ * preference was assumed to only ever change via a full page reload, which
+ * gives every one of those components a fresh mount for free. `LiteToggle`
+ * no longer reloads the page (see there), so `MotionProvider` subscribes to
+ * this instead, purely to key-remount its whole subtree on a flip — that
+ * remount is what still gives every consumer a "fresh mount" without an
+ * actual navigation, so none of them had to change.
+ */
+export function subscribeLiteModeChange(listener: Listener): () => void {
+  liteModeListeners.add(listener);
+  return () => liteModeListeners.delete(listener);
+}
+
+/** Called by `LiteToggle` once it's finished updating the URL/localStorage/
+ *  `html.lite` class, so every subscriber re-reads `isLiteMode()` and gets
+ *  the new answer. */
+export function notifyLiteModeChange(): void {
+  liteModeListeners.forEach((listener) => listener());
+}
+
+/**
+ * Cheap, synchronous signal that the device's GPU/CPU is likely to struggle
+ * with the WebGL scenes (curved marquee, brackets field). There is no
+ * reliable "GPU tier" API, so this leans on the same signals browsers expose
+ * for adaptive loading: low core count and low device memory. Both are
+ * `undefined` on browsers that don't support them (notably Safari), in which
+ * case we don't downgrade — false negatives are fine, false positives make
+ * capable devices worse for no reason.
+ */
+export function isLowPowerDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const cores = navigator.hardwareConcurrency;
+  if (typeof cores === "number" && cores <= 4) return true;
+  const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
+  if (typeof memory === "number" && memory <= 4) return true;
+  return false;
+}
+
+export function isSaveData(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return Boolean(
+    (navigator as unknown as { connection?: { saveData?: boolean } }).connection?.saveData,
+  );
+}
+
+/**
+ * Whether the connection is genuinely slow — `saveData`, or a `2g`/`slow-2g`
+ * effective type. Deliberately NOT `3g`: Chrome's `effectiveType` is a rolling
+ * estimate off recent network activity and reports `3g` very readily — on a dev
+ * server, on any connection with elevated RTT, or on fine broadband that just
+ * had a slow moment — so gating the lite prompt on it fired for people on
+ * perfectly usable connections (and on localhost). `navigator.connection` is
+ * absent on Safari/Firefox → `false` (no signal, no downgrade).
+ */
+export function isSlowConnection(): boolean {
+  if (isSaveData()) return true;
+  if (typeof navigator === "undefined") return false;
+  const connection = (navigator as unknown as { connection?: { effectiveType?: string } }).connection;
+  if (!connection) return false;
+  return connection.effectiveType === "slow-2g" || connection.effectiveType === "2g";
+}
+
+/**
+ * Dev-only URL override for the preloader's lite-mode prompt, so it's testable
+ * without spoofing `navigator.connection` (Chrome's throttling doesn't reliably
+ * update `effectiveType`) or waiting out a real slow load. `?lite-prompt=1`
+ * forces the prompt shown, `?lite-prompt=0` forces it hidden, absent → `null`
+ * (no opinion). Stripped from prod builds — `NODE_ENV` is statically replaced,
+ * so this is dead code there.
+ */
+export function litePromptOverride(): boolean | null {
+  if (process.env.NODE_ENV === "production" || typeof window === "undefined") return null;
+  const forced = new URLSearchParams(window.location.search).get("lite-prompt");
+  return forced === "1" ? true : forced === "0" ? false : null;
+}
+
+/**
+ * The *instant* half of "should the preloader offer lite mode" — a genuinely
+ * slow connection (2g / save-data) or a device likely to struggle with the
+ * WebGL scenes. The other half is measured (`slow` from useAssetsLoaded — the
+ * load has actually been dragging), which is the more reliable signal; this one
+ * catches the cases that are knowable at t=0. Offering lite does NOT downgrade
+ * anything by itself (see `shouldUseStaticBaseline`).
+ */
+export function shouldSuggestLiteMode(): boolean {
+  const forced = litePromptOverride();
+  if (forced !== null) return forced;
+  return isSlowConnection() || isLowPowerDevice();
+}
+
+/**
+ * Phone / small-tablet viewports. Matches the site's `lg` (1024px) breakpoint.
+ * Used to thin hallway photo counts and marquee plane size — not to skip the
+ * intro. The experience plays on this width unless lite or reduced-motion.
+ */
+export function isNarrowViewport(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 1023px)").matches;
+}
+
+/**
+ * True when the full motion layer (preloader, intro, hallway, 3D) should be
+ * skipped entirely and the visitor sent straight to the static site.
+ *
+ * Connection speed is intentionally not a gate — the bouncing preloader holds
+ * until everything is ready, and offers lite if the wait drags. Opt-outs:
+ * reduced-motion and the manual lite toggle (`?lite=1` / footer).
+ */
+export function shouldUseStaticBaseline(): boolean {
+  return prefersReducedMotion() || isLiteMode();
+}
+
+/**
+ * True when a heavy optional download (three.js, chiefly) must not be fetched
+ * at all. Lite mode skips it — and reduced-motion counts as lite by default
+ * (see isLiteMode), so those visitors get the static hero rather than a
+ * still-rendered WebGL one.
+ */
+export function shouldSkipHeavyAssets(): boolean {
+  return isLiteMode();
+}

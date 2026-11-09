@@ -1,0 +1,128 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { Frame } from "@/components/Frame";
+import { SectionDivider } from "@/components/SectionDivider";
+import { NotFoundRecovery } from "@/components/NotFoundRecovery";
+import { NotFoundHighlights } from "@/components/NotFoundHighlights";
+import { siteRoutes } from "@/lib/routes";
+import { getArchivePhotos } from "@/lib/content";
+import { siteConfig, formatEventDate, uiCopy } from "@/site.config";
+
+/*
+ * Branded 404. Reached by notFound() (e.g. an unknown speaker slug) and by
+ * every unmatched URL. Renders inside the root layout, so the header and
+ * footer nav are still there — never a dead end.
+ *
+ * Design rule for this page: whoever is reading it is already annoyed, so
+ * every flourish here has to shorten the way out rather than decorate the
+ * dead end. Nothing animates on a delay, nothing blocks, and the headline,
+ * the highlights and the full route list are all in the static HTML —
+ * readable before hydration and with JavaScript off. The one piece that waits
+ * for the browser is the piece that needs the URL, and it reserves its own
+ * height so nothing jumps.
+ *
+ * Order matters: the three things people actually came for go first, and the
+ * complete index second. A visitor who mistyped wants a destination, not an
+ * inventory.
+ */
+
+// A stable pick, not a random one: a random photo would differ between the
+// prerender and hydration. The group shot is the warmest thing in the archive,
+// which is the right note to end an error page on.
+
+export const metadata: Metadata = {
+  title: "Page not found",
+  robots: { index: false, follow: true },
+};
+
+export default async function NotFound() {
+  const archivePhotos = await getArchivePhotos();
+  const consolation = archivePhotos.find((p) => p.src.includes("group-photo")) ?? archivePhotos[0];
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
+      <div className="flex flex-col items-center gap-2 mb-8">
+        <div className="signal-dots" aria-hidden>
+          <span className="signal-dots__dot bg-blue" />
+          <span className="signal-dots__dot bg-red" />
+          <span className="signal-dots__dot signal-dots__dot--out" />
+          <span className="signal-dots__dot bg-green" />
+        </div>
+        <span className="text-xs uppercase tracking-wider text-paper/50">
+          {uiCopy.notFoundPage.statusLabel}
+        </span>
+      </div>
+
+      <div className="mt-2">
+        <NotFoundRecovery />
+      </div>
+
+      <div className="mt-10">
+        <SectionDivider />
+      </div>
+
+      <h2 className="mt-8 text-lg font-semibold tracking-tight">
+        {uiCopy.notFoundPage.whatMostPeopleWantHeading}
+      </h2>
+      <div className="mt-4">
+        <NotFoundHighlights />
+      </div>
+
+      {/*
+        The complete index, deliberately lighter than the highlights above —
+        it's the fallback for someone whose destination isn't one of the three,
+        not the main event.
+      */}
+      <h2 className="mt-12 text-xs uppercase tracking-wider text-paper/50">
+        {uiCopy.notFoundPage.everywhereElseHeading}
+      </h2>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {siteRoutes.map((route) => (
+          <li key={route.href}>
+            <Link
+              href={route.href}
+              className="flex items-baseline gap-2 rounded-full border border-paper/10 bg-paper/[0.03] px-4 py-2 text-sm transition-colors hover:border-paper/25 hover:bg-paper/[0.06]"
+            >
+              {route.label}
+              <span className="text-xs text-paper/55">{route.href}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {consolation && (
+        <>
+          <div className="mt-12">
+            <SectionDivider />
+          </div>
+
+          <Link href="/memories" className="group mt-8 block sm:flex sm:items-center sm:gap-6">
+            <div className="w-full opacity-60 transition-opacity group-hover:opacity-100 sm:w-56 sm:shrink-0">
+              <Frame
+                src={consolation.src}
+                alt={consolation.description}
+                title={consolation.title}
+                aspectRatio="3 / 2"
+                sizes="(max-width: 640px) 100vw, 14rem"
+              />
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <p className="font-semibold">{uiCopy.notFoundPage.whileYoureHere}</p>
+              <p className="mt-1 max-w-md text-sm text-paper/70">
+                {uiCopy.notFoundPage.archiveBlurb} {consolation.title} &rarr;
+              </p>
+            </div>
+          </Link>
+        </>
+      )}
+
+      {/*
+        Ends on the event, not on the error. Reads from the config, so it can
+        never contradict the date on the hero or the ticket stub.
+      */}
+      <p className="mt-16 text-xl font-semibold tracking-tight">{uiCopy.notFoundPage.closing}</p>
+      <p className="mt-1 text-sm tabular-nums text-paper/60">
+        {formatEventDate(siteConfig.date)} &middot; {siteConfig.venue.name}
+      </p>
+    </div>
+  );
+}
