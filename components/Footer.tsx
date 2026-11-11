@@ -24,13 +24,13 @@ export function Footer() {
     // relative z-10: lift the footer above the fixed BracketsField backdrop
     // (z-0), which lives inside <main> and would otherwise paint its opaque
     // layer over the footer's non-positioned card, wordmark and pill.
-    <footer className="relative z-10 mt-auto px-4 pb-24 pt-16 sm:px-8">
+    <footer className="relative z-10 mt-auto border-t border-paper/10 bg-ink px-4 pb-16 pt-14 sm:px-8 sm:pb-20">
       <FooterLogo social={socialLinks} />
 
       {/* Utility + legal strip. Kept below the brand lock-up so the Google
           disclaimer, Code of Conduct and lite toggle stay reachable without
           crowding the mark. */}
-      <div className="mx-auto mt-10 flex w-full max-w-4xl flex-col items-center gap-5 text-center text-sm text-paper/70">
+      <div className="mx-auto mt-10 flex w-full max-w-5xl flex-col items-center gap-5 text-center text-sm text-paper/70">
         <nav aria-label="Footer navigation" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-paper/80">
           {navRoutes.map((route) => (
             <Link key={route.href} href={route.href} className="underline-offset-4 hover:text-paper hover:underline">

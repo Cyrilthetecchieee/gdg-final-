@@ -1,12 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { shouldUseStaticBaseline } from "@/lib/motion-prefs";
-import { useClientValue } from "@/lib/useClientValue";
 import { FooterBrackets } from "@/components/FooterBrackets";
 import { GlowButton } from "@/components/GlowButton";
 import { SocialIcon } from "@/components/SocialIcon";
-import { BRACKETS_FIELD_ROUTES } from "@/components/motion/BracketsField";
 import { uiCopy } from "@/site.config";
 
 /*
@@ -35,13 +31,6 @@ export function FooterLogo({
 }: {
   social: { label: string; href: string }[];
 }) {
-  const pathname = usePathname();
-  const staticBaseline = useClientValue(shouldUseStaticBaseline, true);
-  // The 3D field extrudes and settles the lockup itself only on routes that
-  // mount <BracketsField/> (see BRACKETS_FIELD_ROUTES). Everywhere else the
-  // flat SVG is the logo.
-  const field3D = BRACKETS_FIELD_ROUTES.includes(pathname) && !staticBaseline;
-
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-10">
       {/* The logo box. `relative` so the static fallback brackets can anchor to
@@ -64,12 +53,12 @@ export function FooterLogo({
           src="/brand-assets/devfest-logo-wo-brackets-dark.svg"
           alt={uiCopy.footerLogo.alt}
           className="h-full w-full"
-          loading="lazy"
           decoding="async"
           fetchPriority="low"
-          // In 3D mode the WebGL lockup is the visible logo; keep this laid out
-          // for measurement but invisible. Otherwise show it flat, no filter.
-          style={field3D ? { opacity: 0 } : undefined}
+          // Keep the accessible static lockup visible even when the 3D field
+          // is active. It is the reliable fallback on every route and avoids
+          // an empty footer while WebGL loads or is unavailable.
+          style={{ opacity: 1 }}
         />
       </div>
 
