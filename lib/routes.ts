@@ -24,7 +24,6 @@ export const AGENDA_READY = process.env.AGENDA_READY !== "false";
 
 export const siteRoutes: SiteRoute[] = [
   { href: "/", label: "Home", description: "Tracks, schedule preview and the lineup.", inNav: true },
-  { href: "/live", label: "Live", description: "Live track occupancy and current sessions.", inNav: true },
   ...(AGENDA_READY
     ? [
         { href: "/agenda", label: "Agenda", description: "The full schedule preview for the day.", inNav: true },
@@ -40,10 +39,8 @@ export const siteRoutes: SiteRoute[] = [
     : []),
   { href: "/tickets", label: "Tickets", description: "Pick an event and preview ticket categories.", inNav: true },
   { href: "/memories", label: "Memories", description: "Community photo archive and 3D hallway.", inNav: true },
-  { href: "/games", label: "Games", description: "Tech mini-games (jigsaw, crossword, memory, typing) and leaderboards.", inNav: true },
   { href: "/tracks", label: "Tracks", description: "AI & ML, Web & Cloud, Android, Open Source, Design & Career tracks.", inNav: false },
   { href: "/cfp", label: "Submit CFP", description: "Call for proposals — apply to speak at DevFest Madurai.", inNav: false },
-  { href: "/volunteer", label: "Volunteer", description: "Join the volunteer crew behind DevFest Madurai.", inNav: false },
   { href: "/venue", label: "Venue", description: "Madurai venue and travel details.", inNav: false },
   { href: "/contact", label: "Contact", description: "Reach the chapter directly.", inNav: false },
   { href: "/profile", label: "Profile", description: "Your account and saved sessions.", inNav: false, noIndex: true },

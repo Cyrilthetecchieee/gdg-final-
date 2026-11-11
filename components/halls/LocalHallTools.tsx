@@ -86,9 +86,6 @@ export function LocalHallTools({
         <a href="/admin/halls" className="text-blue underline">
           Hall controls
         </a>
-        <a href="/live" className="text-blue underline">
-          Public page
-        </a>
       </div>
       <p role="status">{message}</p>
     </aside>

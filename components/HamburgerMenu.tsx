@@ -6,7 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { navRoutes } from "@/lib/routes";
-import { speakerCta, volunteerCta } from "@/lib/cta";
+import { speakerCta } from "@/lib/cta";
 import { siteConfig, uiCopy } from "@/site.config";
 import { RollingText } from "@/components/motion/RollingText";
 import { AuthButton } from "@/components/auth/AuthButton";
@@ -235,8 +235,6 @@ export function HamburgerMenu() {
   }, [pathname]);
 
   const speaker = speakerCta();
-  const volunteer = volunteerCta();
-
   const hamburgerButton = (
     <button
       ref={buttonRef}
@@ -322,7 +320,6 @@ export function HamburgerMenu() {
                     <Link
                       key={route.href}
                       href={route.href}
-                      data-hall-live-link={route.href === "/live" ? "" : undefined}
                       aria-current={active ? "page" : undefined}
                       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors xl:px-3.5 xl:text-sm ${
                         active
@@ -330,35 +327,10 @@ export function HamburgerMenu() {
                           : "text-paper/75 hover:bg-paper/10 hover:text-paper"
                       }`}
                     >
-                      {route.href === "/live" && (
-                        <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-red" />
-                      )}
                       {route.label}
                     </Link>
                   );
                 })}
-                {volunteer.external ? (
-                  <a
-                    href={volunteer.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-paper/75 transition-colors hover:bg-paper/10 hover:text-paper xl:px-3.5 xl:text-sm"
-                  >
-                    {volunteer.label}
-                  </a>
-                ) : (
-                  <Link
-                    href={volunteer.href}
-                    aria-current={pathname === volunteer.href ? "page" : undefined}
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors xl:px-3.5 xl:text-sm ${
-                      pathname === volunteer.href
-                        ? "bg-paper/15 text-paper"
-                        : "text-paper/75 hover:bg-paper/10 hover:text-paper"
-                    }`}
-                  >
-                    {volunteer.label}
-                  </Link>
-                )}
               </nav>
 
               {headerTitle && (
@@ -394,14 +366,13 @@ export function HamburgerMenu() {
         {navRoutes.map((route) => {
           const active = pathname === route.href;
           return (
-            <div key={route.href} data-menu-item data-hall-live-link={route.href === "/live" ? "" : undefined}>
+            <div key={route.href} data-menu-item>
               <Link
                 href={route.href}
                 aria-current={active ? "page" : undefined}
                 onClick={close}
                 className={active ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
               >
-                {route.href === "/live" && <span aria-hidden="true" className="mr-2 inline-block h-2 w-2 rounded-full bg-red" />}
                 <RollingText>{route.label}</RollingText> →
               </Link>
             </div>
@@ -426,28 +397,6 @@ export function HamburgerMenu() {
               className={pathname === speaker.href ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
             >
               <RollingText>{uiCopy.hamburgerMenu.cfpLabel}</RollingText> →
-            </Link>
-          )}
-        </div>
-        <div data-menu-item>
-          {volunteer.external ? (
-            <a
-              href={volunteer.href}
-              target="_blank"
-              rel="noreferrer"
-              onClick={close}
-              className="text-paper/90 hover:text-paper"
-            >
-              <RollingText>{volunteer.label}</RollingText> →
-            </a>
-          ) : (
-            <Link
-              href={volunteer.href}
-              aria-current={pathname === volunteer.href ? "page" : undefined}
-              onClick={close}
-              className={pathname === volunteer.href ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
-            >
-              <RollingText>{volunteer.label}</RollingText> →
             </Link>
           )}
         </div>

@@ -81,9 +81,6 @@ export function eventForUrl(href: string): { name: string; params: AnalyticsPara
   if (samePath(url, siteConfig.cfp.formUrl) || path === "/cfp") {
     return { name: "generate_lead", params: { lead_type: "cfp" } };
   }
-  if (samePath(url, siteConfig.volunteer.formUrl) || path === "/cfv") {
-    return { name: "generate_lead", params: { lead_type: "volunteer" } };
-  }
   if (
     samePath(url, siteConfig.venue.mapUrl) ||
     url.hostname === "maps.google.com" ||

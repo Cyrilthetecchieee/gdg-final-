@@ -334,11 +334,6 @@ export const siteConfig = {
     formUrl: "/cfp",
   },
 
-  volunteer: {
-    // Routes to the local /volunteer page preserved from the Madurai app.
-    formUrl: "/volunteer",
-  },
-
   sponsorship: {
     brochureUrl: "/partner",
   },
@@ -546,7 +541,6 @@ export const uiCopy = {
 
   heroCopy: {
     agendaLabel: "See Agenda →",
-    volunteerLabel: "Become volunteer →",
     cfpLabel: "Submit CFP →",
   },
 
@@ -655,7 +649,6 @@ export const uiCopy = {
     heading: "See you there!",
     links: [
       { label: "Get Tickets →", href: "/tickets" },
-      { label: "Become a Volunteer →", href: "/volunteer" },
     ] as readonly { label: string; href?: string }[],
   },
 

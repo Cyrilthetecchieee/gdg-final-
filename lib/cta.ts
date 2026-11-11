@@ -40,16 +40,3 @@ export function speakerCta(): Cta {
     external: siteConfig.cfp.formUrl.startsWith("http"),
   };
 }
-
-/**
- * The volunteer pitch — resolves to `siteConfig.volunteer.formUrl` (either a
- * local `/volunteer` page or an external sign-up form).
- */
-export function volunteerCta(): Cta {
-  return {
-    available: true,
-    href: siteConfig.volunteer.formUrl,
-    label: "Become a volunteer",
-    external: siteConfig.volunteer.formUrl.startsWith("http"),
-  };
-}

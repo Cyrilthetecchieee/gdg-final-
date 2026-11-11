@@ -9,11 +9,10 @@ export const dynamic = "force-static";
 /**
  * Short links on this domain that Cloudflare redirects to other sites (they are dashboard
  * rules, not app routes, so nothing in the repo enumerates them). Keep in step with the
- * dashboard; the CFP and volunteer targets are also `siteConfig.cfp` / `siteConfig.volunteer`.
+ * dashboard; the CFP target is also `siteConfig.cfp`.
  */
 const SHORT_LINKS = [
   { path: "/cfp", purpose: "call for proposals" },
-  { path: "/volunteer", purpose: "volunteer sign-up" },
   { path: "/about", purpose: "the GDG Madurai chapter page" },
   { path: "/privacy", purpose: "the privacy policy" },
 ];
@@ -39,7 +38,6 @@ export function GET() {
     venue: { name: siteConfig.venue.name, line1: siteConfig.venue.line1, line2: siteConfig.venue.line2 },
     email: siteConfig.contact.email,
     cfpUrl: siteConfig.cfp.formUrl,
-    volunteerUrl: siteConfig.volunteer.formUrl,
     sponsorshipBrochureUrl: siteConfig.sponsorship.brochureUrl,
     tracks: siteConfig.tracks,
     pages,

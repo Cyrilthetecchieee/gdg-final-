@@ -48,9 +48,8 @@ export function Header() {
 
   const routeItems = navRoutes.map((route) => {
     const active = pathname === route.href;
-    const isLive = route.href === "/live";
     return (
-      <li key={route.href} data-hall-live-link={isLive ? "" : undefined}>
+      <li key={route.href}>
         <Link
           href={route.href}
           aria-current={active ? "page" : undefined}
@@ -61,31 +60,10 @@ export function Header() {
           }`}
         >
           <span>{route.label}</span>
-          {isLive && (
-            <span
-              aria-hidden="true"
-              className="inline-block h-2 w-2 rounded-full bg-red shadow-[0_0_8px_#EA4335]"
-            />
-          )}
         </Link>
       </li>
     );
   });
-
-  const volunteerItem = (
-    <li>
-      <Link
-        href="/volunteer"
-        aria-current={pathname === "/volunteer" ? "page" : undefined}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/[0.03] px-5 py-1.5 text-[14px] font-medium text-white transition-all hover:border-white hover:bg-white/10"
-      >
-        <span>Volunteer</span>
-        <span aria-hidden="true" className="text-xs leading-none">
-          ↗
-        </span>
-      </Link>
-    </li>
-  );
 
   return (
     <header className="site-nav nav-lite-only fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#070B18]/80 backdrop-blur-md">
@@ -105,7 +83,6 @@ export function Header() {
         <nav aria-label={uiCopy.header.navAriaLabel} className="hidden lg:block">
           <ul className="flex items-center gap-3 xl:gap-5 whitespace-nowrap">
             {routeItems}
-            <li className="ml-1">{volunteerItem.props.children}</li>
             <li className="ml-1">
               <AuthButton variant="pill" />
             </li>
@@ -129,15 +106,6 @@ export function Header() {
           >
             <ul className="flex flex-col gap-1">
               {routeItems}
-              <li className="mt-2 pt-2 border-t border-white/10">
-                <Link
-                  href="/volunteer"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-white/50 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
-                >
-                  <span>Volunteer</span>
-                  <span aria-hidden="true">↗</span>
-                </Link>
-              </li>
               <li className="mt-1">
                 <AuthButton variant="pill" />
               </li>

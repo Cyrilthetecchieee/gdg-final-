@@ -30,9 +30,8 @@ export type LlmsInput = {
   dateLabel: string | null;
   venue: { name: string; line1: string; line2: string };
   email: string;
-  /** Where to submit a talk / volunteer (may themselves be short links that redirect). */
+  /** Where to submit a talk (may itself be a short link that redirects). */
   cfpUrl: string;
-  volunteerUrl: string;
   /** The sponsorship brochure (a PDF), or undefined if there isn't one. */
   sponsorshipBrochureUrl?: string;
   tracks: { name: string; description: string }[];
@@ -67,7 +66,6 @@ export function buildLlmsTxt(i: LlmsInput): string {
     `- Tickets: ${at("/tickets")}`,
     `- Contact: ${i.email}`,
     `- Call for proposals: ${i.cfpUrl}`,
-    `- Volunteer: ${i.volunteerUrl}`,
     "",
     "## Pages",
     "",

@@ -258,7 +258,6 @@ export function contactMarkdown(): string {
     "## For something specific",
     "",
     `- Speaking: [Call for proposals](${siteConfig.cfp.formUrl})`,
-    `- Volunteering: [Volunteer sign-up](${siteConfig.volunteer.formUrl})`,
     `- Sponsorship: [Sponsorship brochure (PDF)](${siteConfig.sponsorship.brochureUrl})`,
     `- Partnership: [Community partnership](${siteConfig.url}/partner)`,
     `- Tickets: [Tickets](${siteConfig.url}${siteConfig.ticketing.href})`,

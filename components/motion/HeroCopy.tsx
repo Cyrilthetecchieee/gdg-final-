@@ -1,5 +1,5 @@
 import { siteConfig, formatEventDate, uiCopy } from "@/site.config";
-import { ticketCta, volunteerCta, speakerCta } from "@/lib/cta";
+import { ticketCta, speakerCta } from "@/lib/cta";
 import { AGENDA_READY } from "@/lib/routes";
 
 /**
@@ -30,7 +30,6 @@ export const heroCopy = {
   ticket: ticketCta(),
   /** null until the agenda is actually publishable — see AGENDA_READY. */
   agenda: AGENDA_READY ? { href: siteConfig.agendaUrl, label: uiCopy.heroCopy.agendaLabel } : null,
-  volunteer: { href: volunteerCta().href, label: uiCopy.heroCopy.volunteerLabel },
 } as const;
 
 /**
@@ -47,7 +46,7 @@ export const heroCopy = {
  * allow-list once it is — so `HERO_BUTTONS` without `agenda` hides it even
  * after the agenda is published.
  */
-const HERO_BUTTON_ORDER = ["tickets", "agenda", "cfp", "volunteer"] as const;
+const HERO_BUTTON_ORDER = ["tickets", "agenda", "cfp"] as const;
 const DEFAULT_HERO_BUTTONS = ["tickets", "agenda"] as const;
 type HeroButtonKey = (typeof HERO_BUTTON_ORDER)[number];
 
@@ -57,7 +56,6 @@ const heroButtonDefs: Record<HeroButtonKey, HeroButton | null> = {
   tickets: { key: "tickets", href: heroCopy.ticket.href, label: uiCopy.common.getTicketsLabel },
   agenda: heroCopy.agenda ? { key: "agenda", href: heroCopy.agenda.href, label: heroCopy.agenda.label } : null,
   cfp: { key: "cfp", href: speakerCta().href, label: uiCopy.heroCopy.cfpLabel },
-  volunteer: { key: "volunteer", href: heroCopy.volunteer.href, label: heroCopy.volunteer.label },
 };
 
 const heroButtonAllowList: readonly HeroButtonKey[] = (() => {

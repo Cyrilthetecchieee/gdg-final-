@@ -37,9 +37,6 @@ export function Footer() {
               {route.label}
             </Link>
           ))}
-          <Link href="/volunteer" className="underline-offset-4 hover:text-paper hover:underline">
-            Volunteer
-          </Link>
           <Link href="/cfp" className="underline-offset-4 hover:text-paper hover:underline">
             Submit CFP
           </Link>
