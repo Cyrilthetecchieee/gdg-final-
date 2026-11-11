@@ -5,7 +5,7 @@ import { track } from "@/lib/analytics";
 
 export type PushStatus = "unsupported" | "ios-not-installed" | "loading" | "subscribed" | "unsubscribed";
 
-/** Subscribe-state changes made by one hook instance (e.g. the /profile button)
+/** Subscribe-state changes made by one hook instance (e.g. an account button)
  *  are broadcast so every other instance (the auto-prompt) agrees at once. */
 const CHANGE_EVENT = "devfest-push-change";
 
@@ -31,7 +31,7 @@ async function existingSubscription(): Promise<PushSubscription | null> {
 }
 
 /** Shared subscribe/unsubscribe logic for the DevFest Web Push feature —
- *  used by both the explicit button on /profile and the auto-shown prompt.
+ *  used by both explicit account controls and the auto-shown prompt.
  *  Keeping one copy means both always agree on current status. */
 export function usePushSubscription(): {
   status: PushStatus;

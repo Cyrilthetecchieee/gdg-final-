@@ -43,7 +43,6 @@ export const siteRoutes: SiteRoute[] = [
   { href: "/cfp", label: "Submit CFP", description: "Call for proposals — apply to speak at DevFest Madurai.", inNav: false },
   { href: "/venue", label: "Venue", description: "Madurai venue and travel details.", inNav: false },
   { href: "/contact", label: "Contact", description: "Reach the chapter directly.", inNav: false },
-  { href: "/profile", label: "Profile", description: "Your account and saved sessions.", inNav: false, noIndex: true },
 ];
 
 export const navRoutes: SiteRoute[] = siteRoutes.filter((r) => r.inNav);

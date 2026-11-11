@@ -10,7 +10,7 @@ import { safeInternalPath } from "@/lib/safe-redirect";
 /**
  * "Continue with Google" button — the site's glow-button treatment. Once
  * signed in it sends the visitor on to `callbackUrl` (so the sign-in prompt
- * embedded in /profile or /my-agenda turns into the real page without a
+ * embedded in /my-agenda turns into the real page without a
  * manual reload).
  */
 export function SignInButton({ callbackUrl }: { callbackUrl: string }) {

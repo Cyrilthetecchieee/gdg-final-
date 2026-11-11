@@ -6,7 +6,7 @@ import { currentInternalPath } from "@/lib/safe-redirect";
 
 /**
  * The account control that sits next to the hamburger (full-mode nav only).
- * Signed in → the Google avatar, links to /profile. Signed out → a generic
+ * Signed in → the Google avatar, links to saved agenda. Signed out → a generic
  * user glyph that goes straight to /signin, carrying the current page as the
  * post-sign-in return target.
  *
@@ -27,7 +27,7 @@ export function AvatarButton({
 
   function go() {
     if (authed) {
-      router.push("/profile");
+      router.push("/my-agenda");
     } else {
       router.push(`/signin?callbackUrl=${encodeURIComponent(currentInternalPath("/"))}`);
     }
@@ -49,7 +49,7 @@ export function AvatarButton({
         <button
           type="button"
           onClick={go}
-          aria-label={authed ? "Your profile" : "Sign in"}
+          aria-label={authed ? "Your saved agenda" : "Sign in"}
           className="glow-btn__surface pointer-events-auto flex h-11 w-11 items-center justify-center rounded-2xl"
         >
           {image ? (

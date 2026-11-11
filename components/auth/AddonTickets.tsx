@@ -5,7 +5,7 @@ import { GlowButton } from "@/components/GlowButton";
 import type { TicketAddon } from "@/lib/tickets";
 
 /**
- * Add-on tickets (T-shirt, parking, …) for the main ticket on /profile.
+ * Add-on tickets (T-shirt, parking, …) for a claimed ticket.
  * Renders nothing unless the account has at least one add-on.
  *
  * A `<select>` labelled "View add-on tickets" lists them by name; picking one

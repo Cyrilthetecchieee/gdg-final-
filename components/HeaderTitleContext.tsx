@@ -58,7 +58,6 @@ export function resolveHeaderTitle(pathname: string, customTitle: string | null)
   if (pathname.startsWith("/speakers/")) return "Speaker";
   if (pathname === "/memories") return uiCopy.memoriesPage.heading;
   if (pathname === "/partner") return "Community Partnership";
-  if (pathname === "/profile") return "My profile";
   if (pathname === "/signin") return "Sign in";
   if (pathname === "/contact") return uiCopy.contactPage.heading;
   if (pathname === "/tickets") return uiCopy.ticketsList.heading;

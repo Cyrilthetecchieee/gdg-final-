@@ -43,7 +43,7 @@ export async function claimTicket(
       return { error: "That ticket is already linked to another account." };
     case "linked":
     case "unlinked":
-      revalidatePath("/profile");
+      revalidatePath("/my-agenda");
       return { ok: true };
   }
 }

@@ -16,7 +16,7 @@ import { siteConfig } from "@/site.config";
  * Blocking them here would hide those headers and turn away agents that follow the
  * `<link rel="alternate" type="text/markdown">` every page advertises.
  */
-const DISALLOW = ["/profile", "/my-agenda", "/signin", "/api/"];
+const DISALLOW = ["/my-agenda", "/signin", "/api/"];
 
 /** `/` is the default; `/api/content` is the machine-readable data `llms.txt` points at. */
 const ALLOW = ["/", "/api/content"];
