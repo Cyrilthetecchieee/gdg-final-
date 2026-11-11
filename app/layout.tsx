@@ -132,7 +132,7 @@ export default function RootLayout({
          */}
         <style
           dangerouslySetInnerHTML={{
-            __html: `#boot-preloader{position:fixed;inset:0;z-index:995;display:flex;align-items:center;justify-content:center;background:#080C1B;contain:layout paint}#boot-preloader .boot-dots{position:relative;width:min(82vw,720px);aspect-ratio:1728/535}#boot-preloader .boot-dot-slot{position:absolute;top:49.813%;width:9.086%;aspect-ratio:1;transform:translate(-50%,-50%)}#boot-preloader .boot-dot-slot:nth-child(1){left:24.045%}#boot-preloader .boot-dot-slot:nth-child(2){left:41.348%}#boot-preloader .boot-dot-slot:nth-child(3){left:58.651%}#boot-preloader .boot-dot-slot:nth-child(4){left:75.955%}#boot-preloader .boot-dot{width:100%;height:100%;border-radius:50%;will-change:transform;animation:boot-bounce 1.25s ease-in-out infinite}#boot-preloader .boot-dot-slot:nth-child(2) .boot-dot{animation-delay:.12s}#boot-preloader .boot-dot-slot:nth-child(3) .boot-dot{animation-delay:.24s}#boot-preloader .boot-dot-slot:nth-child(4) .boot-dot{animation-delay:.36s}@keyframes boot-bounce{0%,45%,100%{transform:translate3d(0,0,0)}22%{transform:translate3d(0,-20%,0)}}#boot-lite-prompt{position:absolute;left:50%;bottom:max(3.75rem,calc(env(safe-area-inset-bottom,0px) + 2.5rem));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:.5rem;width:min(88vw,340px);padding:.75rem 1rem;border:1px solid rgba(247,249,255,.2);border-radius:1rem;background:#111a33;text-align:center}#boot-lite-prompt .msg{margin:0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.875rem;line-height:1.35;color:rgba(247,249,255,.8)}#boot-lite-prompt .row{display:flex;gap:1rem}#boot-lite-prompt button{background:none;border:0;padding:0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#f7f9ff;cursor:pointer}#boot-lite-prompt button.dismiss{font-weight:500;color:rgba(247,249,255,.6)}html.no-boot #boot-preloader,html.boot-done #boot-preloader{display:none}@media(prefers-reduced-motion:reduce){#boot-preloader{display:none}}`,
+            __html: `#boot-preloader{position:fixed;inset:0;z-index:995;display:flex;align-items:center;justify-content:center;background:#080C1B;contain:layout paint}#boot-preloader .boot-loader{display:flex;flex-direction:column;align-items:center;gap:1.25rem}#boot-preloader .boot-dots{position:relative;width:min(82vw,720px);aspect-ratio:1728/535;animation:boot-spin 1.8s cubic-bezier(.4,0,.2,1) infinite}#boot-preloader .boot-dot-slot{position:absolute;top:49.813%;width:9.086%;aspect-ratio:1;transform:translate(-50%,-50%)}#boot-preloader .boot-dot-slot:nth-child(1){left:24.045%}#boot-preloader .boot-dot-slot:nth-child(2){left:41.348%}#boot-preloader .boot-dot-slot:nth-child(3){left:58.651%}#boot-preloader .boot-dot-slot:nth-child(4){left:75.955%}#boot-preloader .boot-dot{width:100%;height:100%;border-radius:50%;will-change:transform;animation:boot-bounce 1.25s ease-in-out infinite}#boot-preloader .boot-dot-slot:nth-child(2) .boot-dot{animation-delay:.12s}#boot-preloader .boot-dot-slot:nth-child(3) .boot-dot{animation-delay:.24s}#boot-preloader .boot-dot-slot:nth-child(4) .boot-dot{animation-delay:.36s}@keyframes boot-spin{0%{transform:rotate(0deg) scale(1)}45%{transform:rotate(180deg) scale(1.05)}100%{transform:rotate(360deg) scale(1)}}@keyframes boot-bounce{0%,45%,100%{transform:translate3d(0,0,0)}22%{transform:translate3d(0,-20%,0)}}#boot-preloader .boot-brand{margin:0;color:#f7f9ff;font-family:ui-sans-serif,system-ui,sans-serif;font-size:clamp(1rem,2.4vw,1.35rem);font-weight:600;letter-spacing:.16em;text-transform:uppercase}#boot-lite-prompt{position:absolute;left:50%;bottom:max(3.75rem,calc(env(safe-area-inset-bottom,0px) + 2.5rem));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:.5rem;width:min(88vw,340px);padding:.75rem 1rem;border:1px solid rgba(247,249,255,.2);border-radius:1rem;background:#111a33;text-align:center}#boot-lite-prompt .msg{margin:0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.875rem;line-height:1.35;color:rgba(247,249,255,.8)}#boot-lite-prompt .row{display:flex;gap:1rem}#boot-lite-prompt button{background:none;border:0;padding:0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#f7f9ff;cursor:pointer}#boot-lite-prompt button.dismiss{font-weight:500;color:rgba(247,249,255,.6)}html.no-boot #boot-preloader,html.boot-done #boot-preloader{display:none}@media(prefers-reduced-motion:reduce){#boot-preloader{display:none}}`,
           }}
         />
         {/* Mirrors isLiteMode() in lib/motion-prefs.ts, including the `?lite=0`
@@ -146,19 +146,22 @@ export default function RootLayout({
           {`(function(){try{var ua=navigator.userAgent;var bot=/Googlebot|Google-InspectionTool|AdsBot-Google|Storebot-Google|GoogleOther|bingbot|BingPreview|DuckDuckBot|Slurp|YandexBot|facebookexternalhit|Twitterbot|LinkedInBot|Applebot|Chrome-Lighthouse|GPTBot|ClaudeBot|Bytespider|CCBot/i.test(ua);var p=new URLSearchParams(location.search).get('lite');var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;var s=localStorage.getItem('devfest-lite');var lite=p==='1'||(p!=='0'&&(s==='1'||(s!=='0'&&reduce)));var home=location.pathname==='/'||location.pathname==='';if(bot||reduce||lite||!home){document.documentElement.classList.add('no-boot');}if(lite){document.documentElement.classList.add('lite');}}catch(e){}})();`}
         </Script>
         <div id="boot-preloader">
-          <div className="boot-dots" aria-hidden="true">
-            <div className="boot-dot-slot">
-              <div className="boot-dot" style={{ background: "#4285f4" }} />
+          <div className="boot-loader">
+            <div className="boot-dots" aria-hidden="true">
+              <div className="boot-dot-slot">
+                <div className="boot-dot" style={{ background: "#4285f4" }} />
+              </div>
+              <div className="boot-dot-slot">
+                <div className="boot-dot" style={{ background: "#ea4335" }} />
+              </div>
+              <div className="boot-dot-slot">
+                <div className="boot-dot" style={{ background: "#f9ab00" }} />
+              </div>
+              <div className="boot-dot-slot">
+                <div className="boot-dot" style={{ background: "#34a853" }} />
+              </div>
             </div>
-            <div className="boot-dot-slot">
-              <div className="boot-dot" style={{ background: "#ea4335" }} />
-            </div>
-            <div className="boot-dot-slot">
-              <div className="boot-dot" style={{ background: "#f9ab00" }} />
-            </div>
-            <div className="boot-dot-slot">
-              <div className="boot-dot" style={{ background: "#34a853" }} />
-            </div>
+            <p className="boot-brand">DevFest Madurai</p>
           </div>
           {/* Slow-load opt-out for the pre-hydration window — the JS bundle
               itself is what's slow on a bad connection, so the React <Loader>'s
