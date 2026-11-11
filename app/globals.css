@@ -37,8 +37,8 @@ html[data-hall-live-enabled="false"] [data-hall-live-content] {
 }
 
 /*
- * DevFest Chennai brand palette. Core, halftone, pastel and greyscale ramps as
- * supplied by the brand kit — do not hand-mix new shades; pick from these.
+ * DevFest Madurai brand palette. The deep navy base keeps the homepage and
+ * interior pages visually connected while the Google colors provide accents.
  */
 :root {
   /*
@@ -59,10 +59,10 @@ html[data-hall-live-enabled="false"] [data-hall-live-content] {
   /* Solid fallbacks first: Safari < 16.2 / older Chromium drop the whole
      declaration if they don't understand `color-mix`, which would leave
      text and surfaces unstyled. */
-  --ink: #000;
-  --paper: #f0f0f0;
-  --ink: color-mix(in srgb, var(--black), #ffffff calc(var(--theme) * 100%));
-  --paper: color-mix(in srgb, #f0f0f0, var(--black) calc(var(--theme) * 100%));
+  --ink: #080c1b;
+  --paper: #f7f9ff;
+  --ink: color-mix(in srgb, #080c1b, #ffffff calc(var(--theme) * 100%));
+  --paper: color-mix(in srgb, #f7f9ff, #080c1b calc(var(--theme) * 100%));
 
   /*
    * The single fixed backdrop reads this instead of --ink directly, defaulting
@@ -148,10 +148,10 @@ html[data-hall-live-enabled="false"] [data-hall-live-content] {
  * covers the same colour underneath it.
  */
 html.lite {
-  --page-bg: var(--orig-black);
+  --page-bg: var(--ink);
 }
 html.lite body {
-  background-color: var(--orig-black);
+  background-color: var(--ink);
 }
 
 /*
