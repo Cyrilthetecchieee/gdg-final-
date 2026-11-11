@@ -1,124 +1,142 @@
 [
   {
-    "id": "welcome",
+    "id": "registration",
     "track": null,
     "start": "2026-12-12T09:00:00+05:30",
-    "end": "2026-12-12T10:00:00+05:30",
-    "title": "Registration & breakfast",
-    "hall": "Community Lounge",
+    "end": "2026-12-12T09:30:00+05:30",
+    "title": "Registration and networking",
+    "hall": "Main Stage",
     "type": "break",
-    "speakerSlugs": [],
-    "description": "Meet fellow attendees, collect your DevFest Madurai badge and get ready for the day. (Preview schedule — official times to be confirmed.)"
+    "speakerSlugs": []
   },
   {
     "id": "opening",
     "track": "career",
-    "start": "2026-12-12T10:00:00+05:30",
-    "end": "2026-12-12T10:30:00+05:30",
-    "title": "Opening the possibilities",
+    "start": "2026-12-12T09:30:00+05:30",
+    "end": "2026-12-12T09:45:00+05:30",
+    "title": "Opening remarks and DevFest introduction",
     "hall": "Main Stage",
     "type": "keynote",
-    "speakerSlugs": ["gdg-madurai-organizers"],
-    "description": "A community welcome to DevFest Madurai 2026 — where heritage meets innovation."
+    "speakerSlugs": ["gdg-madurai-organizers"]
   },
   {
     "id": "keynote",
     "track": "ai-ml",
-    "start": "2026-12-12T10:30:00+05:30",
-    "end": "2026-12-12T11:30:00+05:30",
-    "title": "The next chapter of AI",
+    "start": "2026-12-12T09:45:00+05:30",
+    "end": "2026-12-12T10:30:00+05:30",
+    "title": "Keynote: What’s Next in AI and Developer Technology?",
     "hall": "Main Stage",
     "type": "keynote",
-    "level": "Beginner",
-    "speakerSlugs": ["keynote-speaker-tba"],
-    "description": "Sample keynote slot from a first prompt to production-grade intelligent systems. Speaker and final topic to be confirmed.",
-    "prerequisites": []
+    "speakerSlugs": ["keynote-speaker-tba"]
   },
   {
-    "id": "panel",
+    "id": "generative-ai",
+    "track": "ai-ml",
+    "start": "2026-12-12T10:30:00+05:30",
+    "end": "2026-12-12T11:15:00+05:30",
+    "title": "Generative AI in Practice: From Ideas to Applications",
+    "hall": "Main Stage",
+    "type": "talk",
+    "speakerSlugs": ["ai-workshop-speaker-tba"]
+  },
+  {
+    "id": "tea-break-morning",
+    "track": null,
+    "start": "2026-12-12T11:15:00+05:30",
+    "end": "2026-12-12T11:30:00+05:30",
+    "title": "Tea break and networking",
+    "hall": "Community Lounge",
+    "type": "break",
+    "speakerSlugs": []
+  },
+  {
+    "id": "google-cloud",
     "track": "web-cloud",
     "start": "2026-12-12T11:30:00+05:30",
     "end": "2026-12-12T12:15:00+05:30",
-    "title": "Building for the next billion",
+    "title": "Building with Google Cloud: Tools, Platforms, and Use Cases",
     "hall": "Main Stage",
-    "type": "panel",
-    "level": "Intermediate",
-    "speakerSlugs": ["web-cloud-speaker-tba"],
-    "description": "A sample panel on building thoughtful web and cloud technology at scale. Speaker lineup to be confirmed.",
-    "prerequisites": []
-  },
-  {
-    "id": "android-modern-ui",
-    "track": "android",
-    "start": "2026-12-12T11:30:00+05:30",
-    "end": "2026-12-12T12:15:00+05:30",
-    "title": "Thoughtful Mobile Craft with Modern Android & Kotlin",
-    "hall": "Workshops & Labs",
     "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": ["android-speaker-tba"],
-    "description": "Preview session exploring Jetpack Compose, on-device AI and modern Android architecture. Speaker to be announced via CFP.",
-    "prerequisites": []
+    "speakerSlugs": ["web-cloud-speaker-tba"]
   },
   {
-    "id": "design-systems-session",
-    "track": "design-product",
+    "id": "developer-tools",
+    "track": "open-source",
     "start": "2026-12-12T12:15:00+05:30",
     "end": "2026-12-12T13:00:00+05:30",
-    "title": "Good Questions, Useful Products: Designing for People First",
-    "hall": "Workshops & Labs",
+    "title": "Developer Tools and Emerging Technologies",
+    "hall": "Main Stage",
     "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": ["design-speaker-tba"],
-    "description": "Preview session on product thinking, human-centred AI interfaces and design craft. Speaker to be announced.",
-    "prerequisites": []
+    "speakerSlugs": ["open-source-speaker-tba"]
   },
   {
     "id": "lunch",
     "track": null,
     "start": "2026-12-12T13:00:00+05:30",
     "end": "2026-12-12T14:00:00+05:30",
-    "title": "Lunch & new connections",
+    "title": "Lunch and community networking",
     "hall": "Community Lounge",
     "type": "break",
-    "speakerSlugs": [],
-    "description": "Take a break, connect with developers and students from across Madurai, and start a conversation."
+    "speakerSlugs": []
   },
   {
-    "id": "workshop",
+    "id": "hands-on-workshop",
     "track": "ai-ml",
     "start": "2026-12-12T14:00:00+05:30",
-    "end": "2026-12-12T15:30:00+05:30",
-    "title": "From idea to working prototype",
+    "end": "2026-12-12T14:45:00+05:30",
+    "title": "Hands-on Workshop: Build a Small AI-Powered Project",
     "hall": "Workshops & Labs",
     "type": "workshop",
-    "level": "Intermediate",
-    "speakerSlugs": ["ai-workshop-speaker-tba"],
-    "description": "A sample hands-on AI & Cloud workshop. Laptop requirements and setup instructions will be shared with the final agenda.",
-    "prerequisites": ["Laptop with modern browser"]
+    "speakerSlugs": ["ai-workshop-speaker-tba"]
   },
   {
-    "id": "lightning",
-    "track": "open-source",
-    "start": "2026-12-12T16:00:00+05:30",
-    "end": "2026-12-12T17:00:00+05:30",
-    "title": "Small talks. Big ideas.",
+    "id": "community-talks",
+    "track": "career",
+    "start": "2026-12-12T14:45:00+05:30",
+    "end": "2026-12-12T15:30:00+05:30",
+    "title": "Community Talks: Projects, Lessons, and Ideas",
     "hall": "Main Stage",
     "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": ["open-source-speaker-tba"],
-    "description": "A sample lightning-talk session for open-source maintainers, first-time contributors and community stories.",
-    "prerequisites": []
+    "speakerSlugs": ["gdg-madurai-organizers"]
+  },
+  {
+    "id": "tea-break-afternoon",
+    "track": null,
+    "start": "2026-12-12T15:30:00+05:30",
+    "end": "2026-12-12T15:45:00+05:30",
+    "title": "Tea break",
+    "hall": "Community Lounge",
+    "type": "break",
+    "speakerSlugs": []
+  },
+  {
+    "id": "careers-panel",
+    "track": "career",
+    "start": "2026-12-12T15:45:00+05:30",
+    "end": "2026-12-12T16:30:00+05:30",
+    "title": "Panel: Careers, Startups, and Building in Tech",
+    "hall": "Main Stage",
+    "type": "panel",
+    "speakerSlugs": ["gdg-madurai-organizers"]
+  },
+  {
+    "id": "audience-qa",
+    "track": "career",
+    "start": "2026-12-12T16:30:00+05:30",
+    "end": "2026-12-12T16:50:00+05:30",
+    "title": "Audience Q&A and community announcements",
+    "hall": "Main Stage",
+    "type": "talk",
+    "speakerSlugs": ["gdg-madurai-organizers"]
   },
   {
     "id": "closing",
     "track": "career",
-    "start": "2026-12-12T17:00:00+05:30",
-    "end": "2026-12-12T17:45:00+05:30",
-    "title": "A celebration of community",
-    "hall": "Community Lounge",
+    "start": "2026-12-12T16:50:00+05:30",
+    "end": "2026-12-12T17:00:00+05:30",
+    "title": "Closing remarks and group photo",
+    "hall": "Main Stage",
     "type": "keynote",
-    "speakerSlugs": ["gdg-madurai-organizers"],
-    "description": "Closing session and community celebration with the organisers, volunteers and attendees who made DevFest Madurai happen."
+    "speakerSlugs": ["gdg-madurai-organizers"]
   }
 ]

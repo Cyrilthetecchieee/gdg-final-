@@ -1,9 +1,7 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getAgenda, getSpeakers } from "@/lib/content";
+import { getAgenda } from "@/lib/content";
 import { siteConfig } from "@/site.config";
-import { AgendaView } from "@/components/AgendaView";
-import { BracketsField } from "@/components/motion/BracketsField";
+import { SimpleAgenda } from "@/components/SimpleAgenda";
 import { AGENDA_READY } from "@/lib/routes";
 import { pageMetadata } from "@/lib/seo";
 
@@ -16,20 +14,11 @@ export const revalidate = 300;
 
 export default async function AgendaPage() {
   if (!AGENDA_READY) notFound();
-  const [agenda, speakers] = await Promise.all([getAgenda(), getSpeakers()]);
+  const agenda = await getAgenda();
 
   return (
-    <>
-      {/* Same 3D brand-shape backdrop the homepage/tickets pages use — see
-          app/tickets/page.tsx's identical mount for why this is safe to add
-          to any route (page-agnostic, drives off scroll + #footer-logo).
-          mode="settled": no drift-then-land sequence to lead into here. */}
-      <BracketsField mode="settled" />
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
-        <Suspense fallback={null}>
-          <AgendaView sessions={agenda} speakers={speakers} tracks={[...siteConfig.tracks]} />
-        </Suspense>
-      </div>
-    </>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
+      <SimpleAgenda sessions={agenda} />
+    </div>
   );
 }
