@@ -106,6 +106,7 @@ export default async function SpeakerPage({ params }: { params: Promise<{ slug: 
             title={speaker.name}
             aspectRatio="1 / 1"
             sizes="(max-width: 640px) 100vw, 18rem"
+            simpleFallback={!speaker.photo}
           />
           <h1 className="mt-5 text-2xl font-semibold">{speaker.name}</h1>
           {role ? <p className="mt-1 text-base text-paper/70">{role}</p> : null}

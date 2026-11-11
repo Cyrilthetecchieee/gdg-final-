@@ -9,7 +9,8 @@ import { BRACKETS_FIELD_ROUTES } from "@/components/motion/BracketsField";
  * Static footer brackets — the fallback lockup for everywhere the 3D
  * BracketsField won't settle a pair into the footer logo: any route that
  * doesn't mount it (see BRACKETS_FIELD_ROUTES), and reduced-motion / lite /
- * save-data on a route that does (the field bails out there too).
+ * save-data on a route that does (the field bails out there too). Speaker
+ * pages intentionally omit the decorative pair.
  *
  * Positions/sizes are lifted straight from brand-assets/devfest-logo.svg,
  * expressed as percentages of the wo-brackets logo box (viewBox 1370×531) that
@@ -37,6 +38,8 @@ export function FooterBrackets() {
   // Default true on the server / first paint: render the static pair unless we
   // positively know the 3D field is going to provide it (home + motion on).
   const staticBaseline = useClientValue(shouldUseStaticBaseline, true);
+  if (pathname === "/speakers" || pathname.startsWith("/speakers/")) return null;
+
   const field3DProvides = BRACKETS_FIELD_ROUTES.includes(pathname) && !staticBaseline;
   if (field3DProvides) return null;
 

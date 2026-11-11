@@ -27,6 +27,7 @@ export function SpeakerWall({ speakers, limit = SLOTS }: { speakers: Speaker[]; 
           title={speaker.name}
           aspectRatio="1 / 1"
           sizes="(max-width: 640px) 50vw, 33vw"
+          simpleFallback={!speaker.photo}
         />
         <span className="mt-3 block truncate text-center font-semibold">{speaker.name}</span>
         <span className="block truncate text-center text-xs text-paper/70">

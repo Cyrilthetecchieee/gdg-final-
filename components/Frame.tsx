@@ -39,6 +39,8 @@ type FrameProps = {
   /** Required: next/image warns (and over-fetches) if this defaults to 100vw. */
   sizes: string;
   className?: string;
+  /** Use a quiet flat fallback for speaker cards that are awaiting a photo. */
+  simpleFallback?: boolean;
   /** Previous frame's fallback colour, so adjacent frames never match. */
   previousColor?: FallbackColor;
   onColorResolved?: (color: FallbackColor) => void;
@@ -60,6 +62,7 @@ export function Frame({
   unoptimized = false,
   sizes,
   className = "",
+  simpleFallback = false,
   previousColor,
   onColorResolved,
 }: FrameProps) {
@@ -76,30 +79,28 @@ export function Frame({
       style={{ aspectRatio }}
     >
       <div
-        className={`absolute inset-0 flex items-end p-3 transition-opacity duration-250 ${FALLBACK_BG[color]} ${
+        className={`absolute inset-0 flex ${simpleFallback ? "items-center justify-center p-4 text-center" : "items-end p-3"} transition-opacity duration-250 ${FALLBACK_BG[color]} ${
           showFallback ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden={!showFallback}
       >
-        {/* The brand mark. Centred and held at 18% so it reads as a watermark
-            behind the label rather than competing with it — the label sits
-            bottom-left, the mark centre, so they rarely overlap and the ink
-            label keeps its 7.0–11.7:1 against the halftone either way. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
-          style={{
-            background: "var(--ink)",
-            maskImage: `url("${FALLBACK_SHAPE[color]}")`,
-            WebkitMaskImage: `url("${FALLBACK_SHAPE[color]}")`,
-            maskRepeat: "no-repeat",
-            WebkitMaskRepeat: "no-repeat",
-            maskPosition: "center",
-            WebkitMaskPosition: "center",
-            maskSize: "42%",
-            WebkitMaskSize: "42%",
-          }}
-        />
+        {!simpleFallback && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-[0.18]"
+            style={{
+              background: "var(--ink)",
+              maskImage: `url("${FALLBACK_SHAPE[color]}")`,
+              WebkitMaskImage: `url("${FALLBACK_SHAPE[color]}")`,
+              maskRepeat: "no-repeat",
+              WebkitMaskRepeat: "no-repeat",
+              maskPosition: "center",
+              WebkitMaskPosition: "center",
+              maskSize: "42%",
+              WebkitMaskSize: "42%",
+            }}
+          />
+        )}
         <span className="relative text-[0.75rem] text-ink tabular-nums">{title}</span>
       </div>
 
