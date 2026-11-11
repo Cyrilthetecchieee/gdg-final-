@@ -6,9 +6,9 @@ import { SocialIcon } from "@/components/SocialIcon";
 import { uiCopy } from "@/site.config";
 
 /*
- * The footer centrepiece: the official DevFest wordmark + "Chennai" pill
- * (brand-assets/devfest-logo-wo-brackets-dark.svg — the dark-background variant;
- * see the src below), framed by the two brackets.
+ * The footer centrepiece: a text-based DevFest Madurai lockup framed by the
+ * brand brackets. It deliberately avoids an image asset until approved artwork
+ * is supplied.
  *
  * Two rendering modes, keyed off whether the 3D BracketsField is live (only on
  * the homepage, only with motion enabled):
@@ -40,27 +40,19 @@ export function FooterLogo({
           settle target is stable. */}
       <div className="relative mx-auto aspect-[1370/531] w-[min(60vw,420px)]">
         <FooterBrackets />
-        {/* eslint-disable-next-line @next/next/no-img-element -- a static brand
-            SVG measured by the motion layer; next/image adds nothing here. */}
-        <img
+        <div
           id="footer-logo"
-          data-keep-image
-          /* The -dark variant: the supplied lockup draws the DevFest wordmark
-             in #F0F0F0 (near-white) — the file meant for a dark backdrop,
-             which is what the footer stays on now (--page-bg settles on
-             black at Location and never moves again). See BracketsField's
-             own LOGO_FILE for the -light counterpart (dark wordmark, for a
-             light footer) this deliberately does NOT use. */
-          src="/brand-assets/devfest-logo-wo-brackets-dark.svg"
-          alt={uiCopy.footerLogo.alt}
-          className="h-full w-full"
-          decoding="async"
-          fetchPriority="low"
-          // Keep the accessible static lockup visible even when the 3D field
-          // is active. It is the reliable fallback on every route and avoids
-          // an empty footer while WebGL loads or is unavailable.
-          style={{ opacity: 1 }}
-        />
+          role="img"
+          aria-label={uiCopy.footerLogo.alt}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-[5%] px-[12%] text-center"
+        >
+          <span className="text-[clamp(2rem,7vw,4.2rem)] font-bold leading-none tracking-[-0.06em] text-paper">
+            DevFest
+          </span>
+          <span className="flex h-[25%] w-full items-center justify-center rounded-full bg-paper px-4 text-[clamp(0.9rem,2.4vw,1.35rem)] font-medium text-ink">
+            Madurai
+          </span>
+        </div>
       </div>
 
       {/* Social buttons — same glass/neon treatment as the site's other CTAs
