@@ -42,35 +42,35 @@ export function StaticHero({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 75% 62%, rgba(218, 106, 78, 0.45) 0%, rgba(122, 54, 102, 0.4) 28%, rgba(26, 24, 62, 0.78) 54%, #080C1B 80%)",
+            "radial-gradient(circle at 75% 62%, rgba(218, 106, 78, 0.22) 0%, rgba(122, 54, 102, 0.2) 28%, rgba(26, 24, 62, 0.42) 54%, rgba(8, 12, 27, 0.92) 88%)",
         }}
       />
 
-      {/* 2. Madurai Meenakshi Amman Temple Gopurams backdrop (lower-right) */}
+      {/* 2. Madurai temple interior backdrop (lower-right) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-[62%] w-full sm:w-[76%] lg:h-[64%] lg:w-[54%]"
+        className="pointer-events-none absolute bottom-0 right-0 h-[78%] w-full sm:w-[88%] lg:h-[80%] lg:w-[72%]"
         style={{
           maskImage:
-            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 16%, black 34%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.88) 14%, black 28%)",
+            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 10%, black 22%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.62) 8%, black 18%)",
           WebkitMaskImage:
-            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.72) 16%, black 34%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.88) 14%, black 28%)",
+            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 10%, black 22%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.62) 8%, black 18%)",
           maskComposite: "intersect",
           WebkitMaskComposite: "source-in",
         }}
       >
         <div className="relative h-full w-full overflow-hidden">
-          {/* Cleanly crops only the temple gopurams and trees (7%..70% vertically of madurai-temple-hero.webp) */}
+          {/* The supplied temple image is softly masked into the navy hero. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/world/madurai-temple-hero.webp"
+            src="/world/madurai-temple-hero.jpg"
             alt=""
             className="absolute left-0 w-full max-w-none select-none object-cover"
             style={{
-              top: "-11%",
-              height: "156%",
-              objectPosition: "center top",
-              filter: "url(#madurai-temple-sharpen) contrast(1.06) saturate(1.1)",
+              top: "-2%",
+              height: "108%",
+              objectPosition: "center center",
+              filter: "url(#madurai-temple-sharpen) brightness(1.14) contrast(1.1) saturate(1.12)",
             }}
           />
         </div>
