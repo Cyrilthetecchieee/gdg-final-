@@ -18,7 +18,10 @@ export function StaticHero({
   enable3D?: boolean;
 }) {
   useEffect(() => {
-    document.documentElement.classList.add("boot-done");
+    const timer = window.setTimeout(() => {
+      document.documentElement.classList.add("boot-done");
+    }, 900);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
