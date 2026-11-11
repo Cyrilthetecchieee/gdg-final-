@@ -49,37 +49,7 @@ export function StaticHero({
         }}
       />
 
-      {/* 2. Madurai temple interior backdrop (lower-right) */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-[78%] w-full sm:w-[88%] lg:h-[80%] lg:w-[72%]"
-        style={{
-          maskImage:
-            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 10%, black 22%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.62) 8%, black 18%)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 10%, black 22%), linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.62) 8%, black 18%)",
-          maskComposite: "intersect",
-          WebkitMaskComposite: "source-in",
-        }}
-      >
-        <div className="relative h-full w-full overflow-hidden">
-          {/* The supplied temple image is softly masked into the navy hero. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/world/madurai-temple-hero.jpg"
-            alt=""
-            className="absolute left-0 w-full max-w-none select-none object-cover"
-            style={{
-              top: "-2%",
-              height: "108%",
-              objectPosition: "center center",
-              filter: "url(#madurai-temple-sharpen) brightness(1.14) contrast(1.1) saturate(1.12)",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* 3. Ambient colour glow behind the 3D Glass Brackets */}
+      {/* 2. Ambient colour glow behind the 3D Glass Brackets */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-[8%] top-[8%] h-[320px] w-[460px] rounded-full opacity-50 blur-[85px]"

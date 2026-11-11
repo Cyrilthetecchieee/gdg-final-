@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Keep supplied photos out of the site until approved replacement assets arrive. */
+.image-free img:not([data-keep-image]) {
+  display: none !important;
+}
+
 /* Runtime emergency flag is stamped by the Worker before HTML reaches the browser. */
 html[data-hall-live-enabled="false"] [data-hall-live-link],
 html[data-hall-live-enabled="false"] [data-hall-live-content] {

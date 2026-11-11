@@ -44,6 +44,7 @@ export function FooterLogo({
             SVG measured by the motion layer; next/image adds nothing here. */}
         <img
           id="footer-logo"
+          data-keep-image
           /* The -dark variant: the supplied lockup draws the DevFest wordmark
              in #F0F0F0 (near-white) — the file meant for a dark backdrop,
              which is what the footer stays on now (--page-bg settles on

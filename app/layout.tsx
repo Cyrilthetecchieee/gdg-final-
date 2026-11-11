@@ -101,7 +101,7 @@ export default function RootLayout({
     // class on <html> before hydration, so the server and client class lists
     // differ by design (the standard pre-paint-script pattern).
     <html lang="en-IN" suppressHydrationWarning className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-ink text-paper" suppressHydrationWarning>
+      <body className="image-free flex min-h-full flex-col bg-ink text-paper" suppressHydrationWarning>
         <a href="#main" className="skip-link">
           {uiCopy.common.skipToContent}
         </a>
