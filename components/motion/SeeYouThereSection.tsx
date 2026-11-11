@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -109,6 +110,49 @@ export function SeeYouThereSection() {
       >
         {HEADING}
       </h2>
+
+      {/* Event and Madurai architectural photography cards */}
+      <div className="grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="relative h-44 overflow-hidden rounded-3xl border border-paper/15 sm:h-52">
+          <Image
+            src="/archive/2024-group-photo.webp"
+            alt="Community group photo at DevFest"
+            fill
+            sizes="(min-width: 640px) 20rem, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+          <span className="absolute bottom-3 left-4 text-xs font-semibold uppercase tracking-wider text-paper/90">
+            Community Energy
+          </span>
+        </div>
+        <div className="relative h-44 overflow-hidden rounded-3xl border border-paper/15 sm:h-52">
+          <Image
+            src="/art/sunset.webp"
+            alt="Madurai temple skyline at sunset"
+            fill
+            sizes="(min-width: 640px) 20rem, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+          <span className="absolute bottom-3 left-4 text-xs font-semibold uppercase tracking-wider text-yellow">
+            Madurai Heritage
+          </span>
+        </div>
+        <div className="relative h-44 overflow-hidden rounded-3xl border border-paper/15 sm:h-52">
+          <Image
+            src="/archive/2025-badges-held-up.webp"
+            alt="Attendees holding up DevFest badges"
+            fill
+            sizes="(min-width: 640px) 20rem, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+          <span className="absolute bottom-3 left-4 text-xs font-semibold uppercase tracking-wider text-paper/90">
+            Builders &amp; Creators
+          </span>
+        </div>
+      </div>
 
       <div className="flex flex-col items-center gap-4 text-[clamp(1rem,2vw,1.375rem)] text-paper sm:flex-row sm:gap-10">
         {LINKS.map((link) =>

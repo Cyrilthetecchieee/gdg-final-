@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { navRoutes } from "@/lib/routes";
 import { speakerCta, volunteerCta } from "@/lib/cta";
-import { uiCopy } from "@/site.config";
+import { siteConfig, uiCopy } from "@/site.config";
 import { RollingText } from "@/components/motion/RollingText";
 import { AuthButton } from "@/components/auth/AuthButton";
 import { AvatarButton } from "@/components/auth/AvatarButton";
@@ -285,42 +285,84 @@ export function HamburgerMenu() {
               ? "z-50 bg-transparent"
               : "z-50 gradient-header"
         } ${isHome ? "pointer-events-none" : ""}`}>
-          <div className="mx-auto flex w-full items-center justify-between px-4 py-3 sm:px-8 sm:py-3.5 pt-[max(0.75rem,calc(env(safe-area-inset-top,0px)+0.5rem))]">
-            {/* Left section: Home button */}
-            <div className={`flex items-center min-w-11 transition-opacity duration-200 ${
-              open || isHome ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`} aria-hidden={isHome || undefined} inert={isHome || undefined}>
+          <div className="mx-auto flex w-full items-center justify-between gap-3 px-4 py-3 sm:px-8 sm:py-3.5 pt-[max(0.75rem,calc(env(safe-area-inset-top,0px)+0.5rem))]">
+            {/* Left section: GDG Madurai brand lockup */}
+            <div
+              className={`flex items-center gap-2 transition-opacity duration-200 ${
+                open ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+            >
               <Link
                 href="/"
                 aria-label={uiCopy.hamburgerMenu.homeAriaLabel}
-                className="glow-btn pointer-events-auto h-11 w-11 rounded-2xl"
-                data-shape="box"
+                className="pointer-events-auto inline-flex items-center gap-2.5 rounded-full border border-paper/15 bg-ink/75 px-3.5 py-2 text-sm font-semibold tracking-tight text-paper backdrop-blur-md transition-colors hover:border-paper/30 hover:bg-ink/90"
               >
-                <span className="glow-btn__corners" aria-hidden="true" />
-                <span className="glow-btn__surface flex h-11 w-11 items-center justify-center rounded-2xl">
-                  <span className="glow-btn__label">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-                      <path
-                        d="M4 11.5 12 4l8 7.5M6 9.5V20h5v-6h2v6h5V9.5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                <span aria-hidden="true" className="inline-flex items-center gap-0.5 text-base font-bold leading-none">
+                  <span className="text-blue">&lt;</span>
+                  <span className="text-red">/</span>
+                  <span className="text-green">&gt;</span>
                 </span>
+                <span>{siteConfig.chapter}</span>
               </Link>
             </div>
 
-            {/* Center section: Dedicated page title matching in-page font size */}
+            {/* Center section: Desktop primary navigation pill on xl+, or dedicated page title on subpages */}
             <div
               className={`flex-1 flex items-center justify-center px-2 sm:px-4 text-center min-w-0 transition-opacity duration-200 ${
-                open ? "opacity-0" : "opacity-100"
+                open ? "opacity-0 pointer-events-none" : "opacity-100"
               }`}
             >
+              <nav
+                aria-label={uiCopy.header.navAriaLabel}
+                className="pointer-events-auto hidden items-center gap-1 rounded-full border border-paper/15 bg-ink/75 px-2 py-1.5 backdrop-blur-md lg:flex"
+              >
+                {navRoutes.map((route) => {
+                  const active = pathname === route.href;
+                  return (
+                    <Link
+                      key={route.href}
+                      href={route.href}
+                      data-hall-live-link={route.href === "/live" ? "" : undefined}
+                      aria-current={active ? "page" : undefined}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors xl:px-3.5 xl:text-sm ${
+                        active
+                          ? "bg-paper/15 text-paper"
+                          : "text-paper/75 hover:bg-paper/10 hover:text-paper"
+                      }`}
+                    >
+                      {route.href === "/live" && (
+                        <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-red" />
+                      )}
+                      {route.label}
+                    </Link>
+                  );
+                })}
+                {volunteer.external ? (
+                  <a
+                    href={volunteer.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-paper/75 transition-colors hover:bg-paper/10 hover:text-paper xl:px-3.5 xl:text-sm"
+                  >
+                    {volunteer.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={volunteer.href}
+                    aria-current={pathname === volunteer.href ? "page" : undefined}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors xl:px-3.5 xl:text-sm ${
+                      pathname === volunteer.href
+                        ? "bg-paper/15 text-paper"
+                        : "text-paper/75 hover:bg-paper/10 hover:text-paper"
+                    }`}
+                  >
+                    {volunteer.label}
+                  </Link>
+                )}
+              </nav>
+
               {headerTitle && (
-                <h1 className="truncate text-2xl font-semibold tracking-tight text-paper sm:text-3xl md:text-4xl max-w-[50vw] sm:max-w-[60vw]">
+                <h1 className="truncate text-2xl font-semibold tracking-tight text-paper sm:text-3xl md:text-4xl max-w-[50vw] sm:max-w-[60vw] lg:hidden">
                   {headerTitle}
                 </h1>
               )}
@@ -347,38 +389,67 @@ export function HamburgerMenu() {
         aria-label={uiCopy.hamburgerMenu.panelAriaLabel}
         inert={!open}
         ref={panelRef}
-        className="invisible fixed inset-0 z-[55] flex flex-col items-center justify-center gap-8 bg-ink/75 px-6 text-3xl opacity-0 backdrop-blur-md sm:text-5xl"
+        className="invisible fixed inset-0 z-[55] flex flex-col items-center justify-center gap-6 bg-ink/85 px-6 text-2xl opacity-0 backdrop-blur-md sm:gap-7 sm:text-4xl"
       >
-        {navRoutes
-          .filter((route) => route.href !== "/")
-          .map((route) => (
+        {navRoutes.map((route) => {
+          const active = pathname === route.href;
+          return (
             <div key={route.href} data-menu-item data-hall-live-link={route.href === "/live" ? "" : undefined}>
-              <Link href={route.href} onClick={close} className="text-paper/90 hover:text-paper">
-                {route.href === "/live" && <span aria-hidden="true" className="mr-2 inline-block h-2 w-2 rounded-full bg-red" />}<RollingText>{route.label}</RollingText> →
+              <Link
+                href={route.href}
+                aria-current={active ? "page" : undefined}
+                onClick={close}
+                className={active ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
+              >
+                {route.href === "/live" && <span aria-hidden="true" className="mr-2 inline-block h-2 w-2 rounded-full bg-red" />}
+                <RollingText>{route.label}</RollingText> →
               </Link>
             </div>
-          ))}
+          );
+        })}
         <div data-menu-item>
-          <a
-            href={speaker.href}
-            target="_blank"
-            rel="noreferrer"
-            onClick={close}
-            className="text-paper/90 hover:text-paper"
-          >
-            <RollingText>{uiCopy.hamburgerMenu.cfpLabel}</RollingText> →
-          </a>
+          {speaker.external ? (
+            <a
+              href={speaker.href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={close}
+              className="text-paper/90 hover:text-paper"
+            >
+              <RollingText>{uiCopy.hamburgerMenu.cfpLabel}</RollingText> →
+            </a>
+          ) : (
+            <Link
+              href={speaker.href}
+              aria-current={pathname === speaker.href ? "page" : undefined}
+              onClick={close}
+              className={pathname === speaker.href ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
+            >
+              <RollingText>{uiCopy.hamburgerMenu.cfpLabel}</RollingText> →
+            </Link>
+          )}
         </div>
         <div data-menu-item>
-          <a
-            href={volunteer.href}
-            target="_blank"
-            rel="noreferrer"
-            onClick={close}
-            className="text-paper/90 hover:text-paper"
-          >
-            <RollingText>{volunteer.label}</RollingText> →
-          </a>
+          {volunteer.external ? (
+            <a
+              href={volunteer.href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={close}
+              className="text-paper/90 hover:text-paper"
+            >
+              <RollingText>{volunteer.label}</RollingText> →
+            </a>
+          ) : (
+            <Link
+              href={volunteer.href}
+              aria-current={pathname === volunteer.href ? "page" : undefined}
+              onClick={close}
+              className={pathname === volunteer.href ? "font-semibold text-yellow" : "text-paper/90 hover:text-paper"}
+            >
+              <RollingText>{volunteer.label}</RollingText> →
+            </Link>
+          )}
         </div>
         <div data-menu-item>
           <AuthButton variant="menu" />

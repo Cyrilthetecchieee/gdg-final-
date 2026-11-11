@@ -111,7 +111,7 @@ export function optimizedSrc(src: string, width: number): string {
 
 /** The 3D title's typefaces, fetched here so the extruded wordmark is ready too. */
 const TITLE_TYPEFACE = "/fonts/google-sans-bold.typeface.json";
-const TAMIL_TYPEFACE = "/fonts/noto-sans-tamil-chennai.typeface.json";
+const TAMIL_TYPEFACE = "/fonts/noto-sans-tamil-city.typeface.json";
 
 /**
  * Resolves to `true` once the initial experience is genuinely ready — web fonts

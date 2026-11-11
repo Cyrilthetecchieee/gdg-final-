@@ -53,7 +53,7 @@
 		//   npx wrangler d1 migrations apply devfest-chennai-2026 --remote
 		{
 			"binding": "DB",
-			"database_name": "devfest-chennai-2026",
+			"database_name": "devfest-madurai-2026",
 			"database_id": "7460097a-f29e-4c9d-95ac-fd6070d666d0",
 			"migrations_dir": "migrations"
 		}
@@ -66,7 +66,7 @@
 			// Create the bucket before deploying
 			// You can change the bucket name if you want
 			// See https://developers.cloudflare.com/workers/wrangler/commands/#r2-bucket-create
-			"bucket_name": "devfest-chennai-2026-opennext-cache"
+			"bucket_name": "devfest-madurai-2026-opennext-cache"
 		}
 	],
 	"images": {

@@ -52,8 +52,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@gdgchennai",
-    creator: "@gdgchennai",
+    site: "@gdgmadurai",
+    creator: "@gdgmadurai",
     images: [OG_IMAGE.url],
   },
   robots: {
@@ -220,7 +220,9 @@ export default function RootLayout({
           </FavoritesProvider>
         </AuthProvider>
       </body>
-      {process.env.NEXT_PUBLIC_HALL_ISOLATED !== "1" && <GoogleAnalytics gaId={siteConfig.analytics.measurementId} />}
+      {process.env.NEXT_PUBLIC_HALL_ISOLATED !== "1" && siteConfig.analytics.measurementId && (
+        <GoogleAnalytics gaId={siteConfig.analytics.measurementId} />
+      )}
     </html>
   );
 }

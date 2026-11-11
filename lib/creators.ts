@@ -9,15 +9,15 @@
  * Markdown for the twin. Plain data, no imports — safe for a client component and the server.
  */
 export const creators = {
-  eyebrow: "GDG Chennai Presents",
-  title: "DEVFEST CHENNAI 2026",
-  tagline: "Build. Secure. Scale.",
-  dateLine: "17 October 2026 · IIT Madras Research Park · Chennai",
+  eyebrow: "GDG Madurai Presents",
+  title: "DEVFEST MADURAI 2026",
+  tagline: "Where heritage meets innovation.",
+  dateLine: "Date to be announced · Madurai, Tamil Nadu",
 
   heading: "An Invitation to Creators",
   intro: {
     paragraphs: [
-      "DevFest Chennai is a community-led technology conference by **Google Developer Group Chennai (GDG Chennai)**, a non-profit developer community supported by Google for the past **15 years**. This year, we're bringing together developers, builders, creators and curious minds to explore how technology and AI are changing the way we build, create and work.",
+      "DevFest Madurai is a community-led technology conference by **Google Developer Group Madurai (GDG Madurai)**, a developer community bringing together developers, builders, creators and curious minds to explore how technology and AI are changing the way we build, create and work.",
       "And we believe content creators are an important part of that conversation.",
       "AI has touched almost every kind of work, and content creation is no different. From ideation and scripting to videography, editing, design and publishing, creators are finding new ways to use AI in their everyday workflows.",
     ],
@@ -42,7 +42,7 @@ export const creators = {
     heading: "What You Can Do at DevFest?",
     joinUs: {
       title: "Join Us",
-      body: "We'd be happy to invite you to DevFest Chennai 2026 and provide your event ticket. Come experience the event, meet the community and be part of the conversations happening throughout the day.",
+      body: "We'd be happy to invite you to DevFest Madurai 2026 and provide your event ticket. Come experience the event, meet the community and be part of the conversations happening throughout the day.",
     },
     lounge: {
       title: "Creator Lounge",
@@ -73,12 +73,12 @@ export const creators = {
 
   closing: {
     body: "We'd love to bring your perspective into the room and give the community a chance to learn from how you build, create and use AI every day.",
-    heading: "We'd love to have you at DevFest 2026 Chennai. 🚀",
-    date: "17 October 2026",
-    venue: "IIT Madras Research Park, Chennai",
+    heading: "We'd love to have you at DevFest Madurai 2026. 🚀",
+    date: "Date to be announced",
+    venue: "Madurai, Tamil Nadu",
     links: [
-      { label: "DevFest Chennai: devfest.gdgchennai.in", href: "https://devfest.gdgchennai.in" },
-      { label: "GDG Chennai: gdg.community.dev/gdg-chennai/", href: "https://gdg.community.dev/gdg-chennai/" },
+      { label: "DevFest Madurai", href: "/" },
+      { label: "GDG Madurai: gdg.community.dev/gdg-madurai/", href: "https://gdg.community.dev/gdg-madurai/" },
     ],
   },
 } as const;

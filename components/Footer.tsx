@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { siteConfig, uiCopy } from "@/site.config";
+import { navRoutes } from "@/lib/routes";
 import { LiteToggle } from "@/components/motion/LiteToggle";
 import { FooterLogo } from "@/components/FooterLogo";
 
@@ -22,13 +24,36 @@ export function Footer() {
     // relative z-10: lift the footer above the fixed BracketsField backdrop
     // (z-0), which lives inside <main> and would otherwise paint its opaque
     // layer over the footer's non-positioned card, wordmark and pill.
-    <footer className="relative z-10 mt-auto px-4 py-16 sm:px-8">
+    <footer className="relative z-10 mt-auto px-4 pb-24 pt-16 sm:px-8">
       <FooterLogo social={socialLinks} />
 
       {/* Utility + legal strip. Kept below the brand lock-up so the Google
           disclaimer, Code of Conduct and lite toggle stay reachable without
           crowding the mark. */}
-      <div className="mx-auto mt-10 flex w-full max-w-2xl flex-col items-center gap-4 text-center text-sm text-paper/70">
+      <div className="mx-auto mt-10 flex w-full max-w-4xl flex-col items-center gap-5 text-center text-sm text-paper/70">
+        <nav aria-label="Footer navigation" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-paper/80">
+          {navRoutes.map((route) => (
+            <Link key={route.href} href={route.href} className="underline-offset-4 hover:text-paper hover:underline">
+              {route.label}
+            </Link>
+          ))}
+          <Link href="/volunteer" className="underline-offset-4 hover:text-paper hover:underline">
+            Volunteer
+          </Link>
+          <Link href="/cfp" className="underline-offset-4 hover:text-paper hover:underline">
+            Submit CFP
+          </Link>
+          <Link href="/tracks" className="underline-offset-4 hover:text-paper hover:underline">
+            Tracks
+          </Link>
+          <Link href="/venue" className="underline-offset-4 hover:text-paper hover:underline">
+            Venue
+          </Link>
+          <Link href="/dfs-2026-selected" className="underline-offset-4 hover:text-paper hover:underline">
+            DFS 2026
+          </Link>
+        </nav>
+
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <a
             href={siteConfig.codeOfConduct.url}
@@ -55,6 +80,9 @@ export function Footer() {
         {/* /50 is as muted as this may go: on the dark page it measures
             4.76:1, and 12px legal text needs 4.5:1. Anything fainter fails. */}
         <p className="max-w-2xl text-xs text-paper/50">{siteConfig.brandDisclaimer}</p>
+        <p className="text-xs text-paper/50">
+          &copy; 2026 {siteConfig.chapter} · {siteConfig.name}
+        </p>
       </div>
     </footer>
   );

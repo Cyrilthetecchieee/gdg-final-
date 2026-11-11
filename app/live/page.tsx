@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 export const dynamic = "force-static";
 export const metadata = pageMetadata({
   title: "Live at DevFest",
-  description: "Live track occupancy and sessions at DevFest Chennai.",
+  description: "Live track occupancy and sessions at DevFest Madurai.",
   path: "/live",
 });
 export default function LivePage() {

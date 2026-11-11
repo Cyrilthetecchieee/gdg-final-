@@ -1,31 +1,21 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { isLiteMode, shouldSkipHeavyAssets } from "@/lib/motion-prefs";
 import { useClientValue } from "@/lib/useClientValue";
 import { StaticHero } from "@/components/motion/StaticHero";
 import type { ArchivePhoto } from "@/lib/schemas";
 
 /**
- * The WebGL intro + curved marquee. Loaded only when `shouldSkipHeavyAssets`
- * is false (not lite). `ssr: false` so the first HTML is always StaticHero;
- * the chunk (and three.js inside it) loads after hydration. The GSAP Loader
- * covers that swap on first visit. Import is async — a failed chunk falls
- * through SectionBoundary to StaticHero.
+ * Renders the approved DevFest Madurai 2026 Hero Section:
+ *  - Dark cinematic night-to-twilight backdrop with Madurai Meenakshi Amman Temple gopurams
+ *  - Clean bold Google Sans typography ("DevFest" in white with yellow spark rays,
+ *    "Madurai" in Google Blue, Red, Yellow, Green)
+ *  - Real Three.js 3D translucent Google-coloured glass brackets (< >) with refraction,
+ *    specular lighting, floating motion, and mouse/scroll interaction.
+ *  - Event date: 12 December 2026, Venue: To be announced.
  */
-const HeroMotion = dynamic(() => import("./HeroMotion").then((m) => ({ default: m.HeroMotion })), {
-  ssr: false,
-  loading: () => <StaticHero />,
-});
-
-/**
- * Chooses the hero. SSR and no-JS always get StaticHero (the `true` default on
- * `shouldSkipHeavyAssets`). After hydration, lite stays on that HTML; everyone
- * else loads HeroMotion in a separate chunk, including phones.
- */
-export function HeroSection({ photos }: { photos: ArchivePhoto[] }) {
-  const skipHeavy = useClientValue(shouldSkipHeavyAssets, true);
+export function HeroSection({ photos: _photos }: { photos: ArchivePhoto[] }) {
+  const skipHeavy = useClientValue(shouldSkipHeavyAssets, false);
   const lite = useClientValue(isLiteMode, false);
-  if (skipHeavy) return <StaticHero offerFullExperience={lite} />;
-  return <HeroMotion photos={photos} />;
+  return <StaticHero offerFullExperience={lite} enable3D={!skipHeavy} />;
 }

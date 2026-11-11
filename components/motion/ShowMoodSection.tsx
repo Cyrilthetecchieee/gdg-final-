@@ -19,7 +19,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 /** Placeholder art — any two images work here; these are just two from
  *  public/archive already in the repo. Swap for the real CDN images later,
  *  nothing else in this file depends on which images these are. */
-const IMAGE_LEFT = "/archive/2025-speaker-research-park.webp";
+const IMAGE_LEFT = "/archive/2024-speaker-on-stage.webp";
 const IMAGE_RIGHT = "/archive/2025-attend.webp";
 
 const TITLE_LEFT = uiCopy.showMoodSection.presentTitle;
@@ -129,11 +129,17 @@ const NARROW_TEXT_MAX_WIDTH = "92%";
  *  one corner rather than darkening a whole straight band across the photo.
  *  Sits between the Image and PanelCopy (z-index 0 vs PanelCopy's 20). */
 function TextScrim({ corner }: { corner: "top left" | "bottom right" }) {
+  const accentGlow =
+    corner === "top left"
+      ? "radial-gradient(ellipse 60% 50% at 18% 18%, rgba(66,133,244,0.28), rgba(161,66,244,0.14) 45%, transparent 70%), "
+      : "radial-gradient(ellipse 60% 50% at 82% 82%, rgba(52,168,83,0.28), rgba(251,188,4,0.14) 45%, transparent 70%), ";
   return (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0"
-      style={{ background: `radial-gradient(ellipse 75% 65% at ${corner}, rgba(0,0,0,0.75), transparent 65%)` }}
+      style={{
+        background: `${accentGlow}radial-gradient(ellipse 75% 65% at ${corner}, rgba(0,0,0,0.78), transparent 65%)`,
+      }}
     />
   );
 }
@@ -358,6 +364,10 @@ function PanelCopy({
     >
       {align === "top" ? (
         <>
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-blue/40 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+            <span className="h-2 w-2 rounded-full bg-blue" aria-hidden="true" />
+            <span>Call for Speakers · CFP</span>
+          </div>
           {heading}
           {paragraph}
           {linkMask}
@@ -367,6 +377,11 @@ function PanelCopy({
           {linkMask}
           {paragraph}
           {heading}
+          <div className="inline-flex items-center gap-2 self-end rounded-full border border-green/40 bg-black/55 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+            <span className="h-2 w-2 rounded-full bg-green" aria-hidden="true" />
+            <span className="h-2 w-2 rounded-full bg-yellow" aria-hidden="true" />
+            <span>Join the Community · Passes</span>
+          </div>
         </>
       )}
     </div>
@@ -416,8 +431,8 @@ export function ShowMoodSection() {
   const cfpLink = (
     <GlowButton
       href={cfp.href}
-      target="_blank"
-      rel="noreferrer"
+      target={cfp.external ? "_blank" : undefined}
+      rel={cfp.external ? "noreferrer" : undefined}
       className="self-start"
       size="sm"
       textClassName="text-white"
@@ -489,9 +504,20 @@ export function ShowMoodSection() {
           panels with no lead-in. Static baseline only: full motion still gets
           that line from MoodSection itself. */}
       {staticBaseline && (
-        <h2 className="px-6 pb-8 pt-16 text-left text-paper text-[clamp(2rem,8vw,6rem)] font-bold leading-none tracking-tight sm:px-10">
-          {uiCopy.moodSection.heading}
-        </h2>
+        <div className="px-6 pb-8 pt-16 sm:px-10">
+          <h2 className="text-left text-paper text-[clamp(2rem,8vw,6rem)] font-bold leading-none tracking-tight">
+            {uiCopy.moodSection.heading}
+          </h2>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-2xl font-bold tracking-tight sm:text-4xl">
+            <span className="text-blue">BUILD</span>
+            <span aria-hidden="true" className="text-paper/30">·</span>
+            <span className="text-red">LEARN</span>
+            <span aria-hidden="true" className="text-paper/30">·</span>
+            <span className="text-yellow">NETWORK</span>
+            <span aria-hidden="true" className="text-paper/30">·</span>
+            <span className="text-green">CREATE</span>
+          </div>
+        </div>
       )}
       <section ref={wrapRef} className="relative h-dvh overflow-hidden">
         {/* One pair per breakpoint. Both used to stay mounted (`hidden sm:block`),
@@ -520,7 +546,7 @@ export function ShowMoodSection() {
           body={BODY_LEFT}
           link={cfpLink}
           align="top"
-          anchorClassName="left-0 top-0"
+          anchorClassName="left-0 top-12 sm:top-14"
           maxWidth={`${DESKTOP_TEXT_MAX_WIDTH}%`}
           wrapRef={wrapRef}
           startAt="top center"
@@ -549,7 +575,7 @@ export function ShowMoodSection() {
           body={BODY_RIGHT}
           link={ticketLink}
           align="bottom"
-          anchorClassName="bottom-0 right-0 items-end text-right"
+          anchorClassName="bottom-10 right-0 items-end text-right sm:bottom-12"
           maxWidth={`${DESKTOP_TEXT_MAX_WIDTH}%`}
           wrapRef={wrapRef}
           startAt="top center"
@@ -583,7 +609,7 @@ export function ShowMoodSection() {
           body={BODY_LEFT}
           link={cfpLink}
           align="top"
-          anchorClassName="left-0 top-0"
+          anchorClassName="left-0 top-12"
           maxWidth={NARROW_TEXT_MAX_WIDTH}
           wrapRef={wrapRef}
           startAt="top top"
@@ -612,7 +638,7 @@ export function ShowMoodSection() {
           body={BODY_RIGHT}
           link={ticketLink}
           align="bottom"
-          anchorClassName="bottom-0 right-0 items-end text-right"
+          anchorClassName="bottom-10 right-0 items-end text-right"
           maxWidth={NARROW_TEXT_MAX_WIDTH}
           wrapRef={wrapRef}
           startAt="top top"

@@ -112,7 +112,7 @@ export function HallLive({
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="mb-2 text-sm text-paper/60">
-            {formatEventDate(siteConfig.date)} · Chennai
+            {formatEventDate(siteConfig.date)} · {siteConfig.city}
           </p>
           <h1 className="text-3xl font-semibold sm:text-4xl">
             Live at DevFest

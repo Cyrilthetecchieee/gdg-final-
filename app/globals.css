@@ -155,24 +155,13 @@ html.lite body {
 }
 
 /*
- * Which nav renders is decided by the same `html.lite` class, not React
- * state — it's set pre-paint by the bridge script in app/layout.tsx, so
- * gating on it here means the right nav is present from first paint with no
- * hydration flash. Full mode gets the hamburger (nav-hamburger-only); lite
- * mode gets the old pill bar (nav-lite-only), since the hamburger's expanding
- * panel leans on motion lite mode is meant to skip.
+ * Which nav renders: show the approved pill bar header across all modes.
  */
 .nav-hamburger-only {
-  display: none;
-}
-html:not(.lite) .nav-hamburger-only {
-  display: block;
+  display: none !important;
 }
 .nav-lite-only {
-  display: none;
-}
-html.lite .nav-lite-only {
-  display: flex;
+  display: flex !important;
 }
 
 @theme inline {

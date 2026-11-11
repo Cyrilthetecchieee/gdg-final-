@@ -60,8 +60,8 @@ export const VERIFIED_TECH_CLUES: ThemedWordClue[] = [
     category: "Web",
   },
   {
-    answer: "CHENNAI",
-    clue: "Vibrant coastal tech hub in South India hosting DevFest 2026",
+    answer: "MADURAI",
+    clue: "Historic temple city in Tamil Nadu hosting DevFest Madurai 2026",
     category: "Event",
   },
   {
@@ -161,11 +161,11 @@ export function getDailyDateKey(nowMs = Date.now()): string {
 async function fetchGeminiClues(apiKey?: string, model = DEFAULT_GEMINI_MODEL): Promise<ThemedWordClue[]> {
   if (!apiKey) return [];
 
-  const prompt = `You are the official quizmaster for DevFest Chennai, organized by Google Developer Groups (GDG) Chennai.
+  const prompt = `You are the official quizmaster for DevFest Madurai, organized by Google Developer Groups (GDG) Madurai.
 Generate a valid JSON array of 12 distinct crossword entries for a daily tech puzzle.
 Themes allowed:
 - Google developer technologies (Gemini, Gemma, Android, Kotlin, Jetpack Compose, Flutter, Dart, Firebase, Angular, Go, GCP, BigQuery, Spanner, Vertex AI, TPU, Chrome, Kubernetes).
-- DevFest and GDG Chennai culture (DevFest, Chennai, Community, Keynote, Workshop, Badge, Tracks, Agent).
+- DevFest and GDG Madurai culture (DevFest, Madurai, Community, Keynote, Workshop, Badge, Tracks, Agent).
 
 STRICT RULES:
 1. Every answer must be a single word, uppercase A-Z only, between 3 and 10 letters (no spaces, hyphens, numbers, or symbols).
@@ -468,8 +468,8 @@ export async function getDailyCrosswordPuzzle(nowMs = Date.now()): Promise<Cross
         {
           number: 4,
           direction: "down",
-          clue: "Vibrant coastal tech hub in South India hosting DevFest 2026",
-          answer: "CHENNAI",
+          clue: "Historic temple city in Tamil Nadu hosting DevFest Madurai 2026",
+          answer: "MADURAI",
           row: 3,
           col: 7,
         },
@@ -488,7 +488,7 @@ export async function getDailyCrosswordPuzzle(nowMs = Date.now()): Promise<Cross
   const puzzle: CrosswordPuzzle = {
     id: `crossword-${dateKey}`,
     title: `DevFest Daily (${dateKey})`,
-    category: "Google, DevFest & GDG Chennai",
+    category: "Google, DevFest & GDG Madurai",
     size: compiled.size,
     clues: compiled.clues,
   };

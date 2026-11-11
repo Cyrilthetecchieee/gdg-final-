@@ -1,526 +1,685 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
 import { siteConfig, uiCopy } from "@/site.config";
-import { FALLBACK_BG, fallbackColorFor, type FallbackColor } from "@/lib/fallback-color";
-import { shouldSkipHeavyAssets, shouldUseStaticBaseline } from "@/lib/motion-prefs";
+import { prefersReducedMotion, shouldUseStaticBaseline } from "@/lib/motion-prefs";
 import { useClientValue } from "@/lib/useClientValue";
 import { setHorizontalCue } from "@/components/motion/scrollCueRegistry";
 import { useMotion } from "@/components/motion/MotionProvider";
-import { GlowButton } from "@/components/GlowButton";
-import { ArrowGlyph } from "@/components/ArrowGlyph";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const EXPECT_CARD_SIZES = "(min-width: 1024px) 65vw, (min-width: 768px) 78vw, 84vw";
+type CardAccent = {
+  id: string;
+  badgeLabel: string;
+  borderClass: string;
+  hoverBorderClass: string;
+  iconBgClass: string;
+  dotActiveClass: string;
+  gradientStyle: string;
+  glowColor: string;
+  topBarColor: string;
+};
 
-function ExpectCardPhoto({ src, eager }: { src: string; eager: boolean }) {
-  return (
-    <Image
-      src={src}
-      alt=""
-      aria-hidden
-      fill
-      preload={eager}
-      fetchPriority={eager ? "high" : "low"}
-      decoding="async"
-      sizes={EXPECT_CARD_SIZES}
-      className="object-cover"
-    />
-  );
+const CARD_ACCENTS: readonly CardAccent[] = [
+  {
+    id: "roadshows",
+    badgeLabel: "01 · ROADSHOWS",
+    borderClass: "border-[#4285F4]/45",
+    hoverBorderClass: "hover:border-[#4285F4]",
+    iconBgClass: "bg-[#4285F4]/25 text-white border-[#4285F4]/50",
+    dotActiveClass: "bg-[#4285F4]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(13, 35, 86, 0.15) 0%, rgba(21, 72, 166, 0.78) 44%, rgba(26, 115, 232, 0.96) 72%, rgba(16, 56, 132, 0.98) 100%)",
+    glowColor: "rgba(66, 133, 244, 0.42)",
+    topBarColor: "#4285F4",
+  },
+  {
+    id: "build-sessions",
+    badgeLabel: "02 · BUILD SESSIONS",
+    borderClass: "border-[#34A853]/45",
+    hoverBorderClass: "hover:border-[#34A853]",
+    iconBgClass: "bg-[#34A853]/25 text-white border-[#34A853]/50",
+    dotActiveClass: "bg-[#34A853]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(11, 56, 30, 0.15) 0%, rgba(20, 108, 52, 0.78) 44%, rgba(30, 142, 62, 0.96) 72%, rgba(15, 77, 35, 0.98) 100%)",
+    glowColor: "rgba(52, 168, 83, 0.42)",
+    topBarColor: "#34A853",
+  },
+  {
+    id: "competitions",
+    badgeLabel: "03 · COMPETITIONS",
+    borderClass: "border-[#FBBC04]/45",
+    hoverBorderClass: "hover:border-[#FBBC04]",
+    iconBgClass: "bg-[#FBBC04]/25 text-white border-[#FBBC04]/50",
+    dotActiveClass: "bg-[#FBBC04]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(78, 44, 4, 0.15) 0%, rgba(168, 92, 6, 0.8) 44%, rgba(217, 119, 6, 0.96) 72%, rgba(133, 68, 4, 0.98) 100%)",
+    glowColor: "rgba(251, 188, 4, 0.42)",
+    topBarColor: "#FBBC04",
+  },
+  {
+    id: "tech-talks",
+    badgeLabel: "04 · TECH TALKS",
+    borderLabel: "purple",
+    borderClass: "border-[#A136F7]/45",
+    hoverBorderClass: "hover:border-[#A136F7]",
+    iconBgClass: "bg-[#A136F7]/25 text-white border-[#A136F7]/50",
+    dotActiveClass: "bg-[#A136F7]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(48, 16, 86, 0.15) 0%, rgba(98, 34, 168, 0.78) 44%, rgba(132, 48, 206, 0.96) 72%, rgba(74, 21, 128, 0.98) 100%)",
+    glowColor: "rgba(161, 54, 247, 0.42)",
+    topBarColor: "#A136F7",
+  } as CardAccent,
+  {
+    id: "networking",
+    badgeLabel: "05 · NETWORKING",
+    borderClass: "border-[#EA4335]/45",
+    hoverBorderClass: "hover:border-[#EA4335]",
+    iconBgClass: "bg-[#EA4335]/25 text-white border-[#EA4335]/50",
+    dotActiveClass: "bg-[#EA4335]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(76, 14, 14, 0.15) 0%, rgba(165, 28, 24, 0.78) 44%, rgba(205, 42, 36, 0.96) 72%, rgba(122, 18, 18, 0.98) 100%)",
+    glowColor: "rgba(234, 67, 53, 0.42)",
+    topBarColor: "#EA4335",
+  },
+  {
+    id: "community",
+    badgeLabel: "06 · COMMUNITY",
+    borderClass: "border-[#34A853]/45",
+    hoverBorderClass: "hover:border-[#5CDB6D]",
+    iconBgClass: "bg-[#34A853]/25 text-white border-[#5CDB6D]/50",
+    dotActiveClass: "bg-[#5CDB6D]",
+    gradientStyle:
+      "linear-gradient(180deg, rgba(8, 52, 36, 0.15) 0%, rgba(15, 118, 68, 0.78) 44%, rgba(18, 148, 84, 0.96) 72%, rgba(10, 82, 46, 0.98) 100%)",
+    glowColor: "rgba(52, 168, 83, 0.42)",
+    topBarColor: "#5CDB6D",
+  },
+];
+
+function ExpectCardIcon({ index }: { index: number }) {
+  switch (index % 6) {
+    case 0: // Roadshows — Rocket icon
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <path
+            d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 1: // Build Sessions — Code brackets </>
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <path
+            d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12"
+            stroke="currentColor"
+            strokeWidth="2.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 2: // Competitions — Trophy cup
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <path
+            d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16m-10-7.34V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22m7-7.34V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M18 2H6v7a6 6 0 0 0 12 0V2Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 3: // Tech Talks — Stage microphone
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <rect x="9" y="2" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M5 10a7 7 0 0 0 14 0M12 17v4m-4 0h8"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 4: // Networking — Connected people / nodes
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <circle cx="12" cy="5" r="2.5" stroke="currentColor" strokeWidth="2" />
+          <circle cx="5" cy="18" r="2.5" stroke="currentColor" strokeWidth="2" />
+          <circle cx="19" cy="18" r="2.5" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M10.5 7.2 6.3 15.8m7.2-8.6 4.2 8.6M7.5 18h9"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    default: // Community — Ecosystem group
+      return (
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M3 19.5c0-3.1 2.7-5.5 6-5.5s6 2.4 6 5.5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle cx="17" cy="8.5" r="2.5" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M16 14.5c2.7 0 5 2 5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+  }
 }
 
-const EXPECT_CARDS = (() => {
-  let previousColor: FallbackColor | undefined;
-  return siteConfig.whatYoullGet.map((item) => {
-    previousColor = fallbackColorFor(item.title, previousColor);
-    return {
-      item,
-      photo: item.image ? { src: item.image } : undefined,
-      panelColor: previousColor,
-    };
-  });
-})();
-
-function ExpectCarousel() {
-  const [index, setIndex] = useState(0);
-
-  const canPrev = index > 0;
-  const canNext = index < EXPECT_CARDS.length - 1;
-
-  return (
-    <div className="relative z-10 mx-auto max-w-6xl px-6 py-24 sm:px-10">
-      <h2 className="text-left text-[clamp(1.75rem,8vw,5rem)] font-bold leading-none tracking-tight">
-        {uiCopy.expectShowcase.heading}
-      </h2>
-
-      <div className="relative mt-12">
-        <div className="overflow-hidden rounded-2xl border border-paper/15">
-          <div
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${index * 100}%)` }}
-          >
-            {EXPECT_CARDS.map(({ item, photo }) => (
-              <article key={item.title} className="relative h-[60vh] w-full shrink-0 overflow-hidden md:h-[70vh]">
-                <div className="absolute inset-0">
-                  {photo && (
-                    <Image
-                      src={photo.src}
-                      alt=""
-                      aria-hidden
-                      fill
-                      decoding="async"
-                      fetchPriority={item === EXPECT_CARDS[0]?.item ? "high" : "low"}
-                      sizes="(min-width: 1152px) 72rem, calc(100vw - 3rem)"
-                      className="object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
-                </div>
-                <div className="relative flex h-full flex-col justify-end p-8 sm:p-12">
-                  <h3 className="text-4xl font-semibold tracking-tight sm:text-5xl">{item.title}</h3>
-                  <p className="mt-3 max-w-md text-lg text-paper/85 sm:text-xl">{item.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <GlowButton
-            shape="circle"
-            size="md"
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
-            textClassName={canPrev ? "text-paper" : "text-paper/30"}
-            className={canPrev ? "" : "pointer-events-none"}
-          >
-            <span className="sr-only">{uiCopy.expectShowcase.previousCardSr}</span>
-            <ArrowGlyph direction="left" />
-          </GlowButton>
-
-          <div className="flex items-center gap-2" role="tablist" aria-label="About DevFest cards">
-            {EXPECT_CARDS.map(({ item }, i) => (
-              <button
-                key={item.title}
-                type="button"
-                role="tab"
-                aria-selected={i === index}
-                aria-label={item.title}
-                onClick={() => setIndex(i)}
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  i === index ? "bg-paper" : "bg-paper/30 hover:bg-paper/50"
-                }`}
-              />
-            ))}
-          </div>
-
-          <GlowButton
-            shape="circle"
-            size="md"
-            onClick={() => setIndex((i) => Math.min(EXPECT_CARDS.length - 1, i + 1))}
-            textClassName={canNext ? "text-paper" : "text-paper/30"}
-            className={canNext ? "" : "pointer-events-none"}
-          >
-            <span className="sr-only">{uiCopy.expectShowcase.nextCardSr}</span>
-            <ArrowGlyph direction="right" />
-          </GlowButton>
-        </div>
-      </div>
-    </div>
-  );
-}
+const EXPECT_CARDS = siteConfig.whatYoullGet.map((item, idx) => ({
+  item,
+  photoSrc: item.image ?? "/archive/2025-full-house.webp",
+  accent: CARD_ACCENTS[idx % CARD_ACCENTS.length],
+}));
 
 /**
- * The dark "What to expect" section that follows the hero: a pinned panel whose
- * leaning card row scrolls horizontally as the visitor scrolls down. This runs
- * on ALL screen sizes (mobile included) so the horizontal scroll is driven the
- * same way everywhere — by the page scroll (wheel / trackpad / touch) — rather
- * than a native swipe on mobile and a pin on desktop. The brand-shape backdrop
- * shows behind it.
+ * STAGE 2 — SECTION 2: WHAT TO EXPECT AT DEVFEST?
  *
- * Carries the load-bearing `id="after-hero"` (skip link + hero escape target).
- * Under reduced-motion / lite / save-data it degrades to a static row — lite
- * specifically swaps in `<ExpectCarousel>` (see above) instead of just
- * freezing this section's own animated markup.
+ * A visually rich horizontal showcase containing six large rounded cards with
+ * photographic backgrounds, distinct Google-inspired accent colours, large
+ * readable titles, supporting descriptions, distinctive icons, and hover
+ * interactions.
+ *
+ * - Desktop (`lg` and above): GSAP ScrollTrigger horizontal scroll scrub +
+ *   interactive left/right navigation buttons and pagination indicators.
+ * - Mobile (`< lg`) & static baseline: touch-friendly horizontal scroll
+ *   container (`snap-x snap-mandatory`) + interactive navigation controls.
+ *
+ * Carries `id="after-hero"` (used by the skip link and hero escape target).
  */
-/**
- * How much faster than a literal 1:1 vertical-scroll-to-track-width pace the
- * card row moves — 1 is that literal pace ("one vertical scroll pixel per
- * horizontal track pixel"), which reads as far too slow for a 4-card row
- * (MoodSection's own marquee is a single line of text, a much shorter
- * `travel()`, so it never needed this). BIGGER number = LESS scroll distance
- * spent to see the whole row = FASTER — the pin's scroll range is divided by
- * this, not multiplied by it, so it reads the same direction "speed" always
- * does (this used to be backwards: multiplying meant a bigger number asked
- * for MORE scrolling, the opposite of what the name promised).
- */
-const PIN_SCROLL_SPEED = 2.5;
-
 export function ExpectShowcase() {
-  const wrapRef = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const triggerRef = useRef<ScrollTrigger | null>(null);
+
   const { lenisRef } = useMotion();
+  const skipMotion = useClientValue(prefersReducedMotion, false);
+  const staticBaseline = useClientValue(shouldUseStaticBaseline, false);
 
-  // Match SSR / no-JS with the static baseline, then upgrade on the client.
-  const staticBaseline = useClientValue(shouldUseStaticBaseline, true);
-  // Separate gate: reduced-motion keeps the photography (it is a vestibular
-  // preference, not a bandwidth one) and only loses the horizontal scrub above.
-  const liteAssets = useClientValue(shouldSkipHeavyAssets, true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const cardCount = EXPECT_CARDS.length;
 
+  // Keep activeIndex in sync when swiping on mobile / touch container
+  const handleMobileScroll = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || window.innerWidth >= 1024) return;
+    const maxScroll = Math.max(1, viewport.scrollWidth - viewport.clientWidth);
+    const ratio = Math.min(1, Math.max(0, viewport.scrollLeft / maxScroll));
+    const idx = Math.round(ratio * (cardCount - 1));
+    setActiveIndex(idx);
+  }, [cardCount]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    viewport.addEventListener("scroll", handleMobileScroll, { passive: true });
+    return () => viewport.removeEventListener("scroll", handleMobileScroll);
+  }, [handleMobileScroll]);
+
+  // Navigate to a specific card index via arrow buttons or dots
+  const scrollToCard = useCallback(
+    (targetIndex: number) => {
+      const clamped = Math.min(cardCount - 1, Math.max(0, targetIndex));
+      setActiveIndex(clamped);
+
+      // Desktop with active GSAP ScrollTrigger pin
+      const trigger = triggerRef.current;
+      if (trigger && window.innerWidth >= 1024 && !staticBaseline && !skipMotion) {
+        const progress = cardCount > 1 ? clamped / (cardCount - 1) : 0;
+        const targetY = trigger.start + progress * (trigger.end - trigger.start);
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(targetY, { duration: 0.55 });
+        } else {
+          window.scrollTo({ top: targetY, behavior: "smooth" });
+        }
+        return;
+      }
+
+      // Mobile / tablet or static baseline horizontal scroll container
+      const viewport = viewportRef.current;
+      const cardEl = cardRefs.current[clamped];
+      if (viewport && cardEl) {
+        const targetLeft =
+          cardEl.offsetLeft - Math.max(0, (viewport.clientWidth - cardEl.offsetWidth) / 2);
+        viewport.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
+      }
+    },
+    [cardCount, lenisRef, skipMotion, staticBaseline],
+  );
 
   useGSAP(
     () => {
-      if (staticBaseline) return;
+      if (skipMotion || staticBaseline || !sectionRef.current) return;
 
-      // "About DevFest" rises into place, character by character, once as the
-      // stage scrolls into view close beneath the hero. `mask: "chars"` wraps
-      // each character in its own overflow-clip span so the rise reads as a
-      // reveal rather than characters sliding in from behind neighbouring text.
-      let split: SplitText | undefined;
+      const mm = gsap.matchMedia();
+
+      // Entrance reveal for heading and cards on all viewports
       if (headingRef.current) {
-        split = SplitText.create(headingRef.current, { type: "chars", mask: "chars" });
-        gsap.set(split.chars, { yPercent: 130, opacity: 0 });
-        ScrollTrigger.create({
-          // The heading itself, not the whole (full-screen-tall) section —
-          // it sits vertically centred inside `stage`, so triggering off the
-          // SECTION's top fired while the heading was still well below the
-          // viewport, and the reveal was long done by the time anyone
-          // actually scrolled to where the heading was visible.
-          trigger: headingRef.current,
-          start: "top 80%",
-          once: true,
-          onEnter: () =>
-            gsap.to(split!.chars, {
-              yPercent: 0,
-              opacity: 1,
-              duration: 0.7,
-              stagger: 0.02,
-              ease: "power3.out",
-            }),
-        });
-      }
-
-      if (!stageRef.current || !trackRef.current) return () => split?.revert();
-      const stage = stageRef.current;
-      const track = trackRef.current;
-      const heading = headingRef.current;
-      const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
-      const totalDistance = () => distance() + window.innerWidth;
-      // The actual scroll range the pin consumes — shorter than
-      // totalDistance() itself (see PIN_SCROLL_SPEED) so scrolling through
-      // the whole row doesn't take an unreasonably long scroll. Shared by
-      // both scrollTriggers below so the heading-exit timing (computed in
-      // 0–1 progress terms, not pixels) stays in sync regardless of the
-      // actual distance chosen.
-      const pinDistance = () => totalDistance() / PIN_SCROLL_SPEED;
-
-      // Before the pin, the heading (centred inside this full-height stage)
-      // rides the ordinary page scroll up from the bottom of the screen — the
-      // hero is genuinely still leaving above it — arriving at the vertical
-      // centre exactly as the stage's top reaches the top of the viewport.
-      // That is the instant this pins: the heading holds at centre while the
-      // card track, parked a full viewport off-screen right the whole time,
-      // slides in over it and continues into the normal scrub.
-      //
-      // Pinning `stage` itself (rather than manually fixing the card layer)
-      // is what makes GSAP release it cleanly back into normal flow the
-      // moment the scroll range ends — so the whole stage scrolls away with
-      // the rest of the page afterward instead of staying glued to the
-      // viewport, and stays inert, ordinary in-flow content (not a permanent
-      // full-screen overlay) at every point before its own turn arrives.
-      // The progress at which card `index` actually sits centred in the
-      // viewport — and its inverse, which card is nearest given a progress
-      // value. NOT `index / (cardCount - 1)`: that would only centre card 0
-      // at progress 0 and the last card at progress 1, which assumes the
-      // track travels exactly card-width-per-card — but `x` here runs from
-      // a full viewport off-screen right (progress 0) to just past the last
-      // card's right edge (progress 1), a distance of totalDistance()
-      // regardless of how that compares to each card's own width. Solving
-      // "x + i*cardWidth + cardWidth/2 == innerWidth/2" for progress (given
-      // x(progress) = innerWidth - progress*totalDistance()) is what
-      // actually lands card `i` centred — this is the fix for the snap
-      // settling half a card short (or long) of centred that testing
-      // caught with the naive fraction above. Cards are uniform width with
-      // no gap between them (see the track's own layout), so
-      // scrollWidth / cardCount is `cardWidth` without needing a specific
-      // card element.
-      const cardCount = EXPECT_CARDS.length;
-      const cardWidth = () => (cardCount > 0 ? track.scrollWidth / cardCount : 0);
-      const progressForCard = (index: number) => {
-        const total = totalDistance();
-        const w = cardWidth();
-        if (total <= 0 || w <= 0) return 0;
-        const p = (window.innerWidth / 2 + index * w + w / 2) / total;
-        return Math.min(1, Math.max(0, p));
-      };
-      const cardForProgress = (progress: number) => {
-        const total = totalDistance();
-        const w = cardWidth();
-        if (cardCount <= 1 || w <= 0) return 0;
-        const raw = (progress * total - window.innerWidth / 2 - w / 2) / w;
-        return Math.min(cardCount - 1, Math.max(0, Math.round(raw)));
-      };
-      // -1 for the section's own entry (progress 0, heading shown, no card
-      // centred yet) when that's actually nearer than any real card —
-      // otherwise the nearest real card, same as cardForProgress alone.
-      // Entry is its own legitimate rest/nav position, not "close enough to
-      // card 0 to just be card 0": without this both the snap (see below)
-      // and the cue buttons (see setHorizontalCue further down) either
-      // yanked a fresh arrival at the entry straight to card 0, or made
-      // card 0's own "back" button skip the entry and jump directly to
-      // whatever precedes this section entirely.
-      const nearestIndex = (progress: number) => {
-        const nearestCard = cardForProgress(progress);
-        const nearestCardProgress = progressForCard(nearestCard);
-        return Math.abs(progress) <= Math.abs(progress - nearestCardProgress) ? -1 : nearestCard;
-      };
-
-      /*
-       * Settles on whichever card is nearest once scrolling stops — "one
-       * card centred at rest". This is deliberately NOT ScrollTrigger's own
-       * built-in `snap` option: that snaps by driving the browser's real
-       * scroll position directly, which fights Lenis (Lenis keeps easing
-       * toward ITS OWN idea of the target on the next rAF tick, unaware
-       * anything just moved the scroll from under it) — tested, and it
-       * reliably left the row stuck part-way between two cards instead of
-       * settling on either. Routing the snap itself through
-       * `lenis.scrollTo()` — the same call the cue buttons already use
-       * successfully — is what actually gets the browser and Lenis's own
-       * model of scroll position to agree.
-       *
-       * Debounced off this trigger's own onUpdate (already firing every
-       * scroll-driven recalculation, the same one scrub itself is driven
-       * by), not a separate Lenis "scroll" listener: it needs no polling for
-       * lenisRef to exist first (see MotionProvider's own comment on that).
-       *
-       * Waits on Lenis's own `velocity`, not just "150ms since the last
-       * update" — a flat delay alone fired mid-gesture on real trackpad/wheel
-       * input (individual wheel deltas can go quiet for well over 150ms even
-       * during otherwise-continuous scrolling), and calling `lenis.scrollTo`
-       * while Lenis still has real momentum eats part of the NEXT wheel
-       * delta — Lenis computes velocity off its own animatedScroll target,
-       * which our injected scrollTo had just moved out from under it. That
-       * was the actual cause of scrolling feeling like it progressively
-       * dragged more with every card: each card passed was another chance
-       * for a mid-gesture correction to fire and quietly steal some of the
-       * next scroll input. Checking velocity first means the correction only
-       * ever runs once Lenis agrees nothing is actually still moving.
-       */
-      const SNAP_SETTLE_MS = 150;
-      const SNAP_VELOCITY_EPSILON = 0.05;
-      let snapTimer: ReturnType<typeof setTimeout> | undefined;
-      function trySnap(self: ScrollTrigger) {
-        const lenis = lenisRef.current;
-        if (lenis && Math.abs(lenis.velocity) > SNAP_VELOCITY_EPSILON) {
-          snapTimer = setTimeout(() => trySnap(self), SNAP_SETTLE_MS);
-          return;
-        }
-        if (!self.isActive) return;
-        const nearest = nearestIndex(self.progress);
-        const targetProgress = nearest === -1 ? 0 : progressForCard(nearest);
-        if (Math.abs(self.progress - targetProgress) < 0.001) return;
-        const targetY = self.start + targetProgress * (self.end - self.start);
-        lenis?.scrollTo(targetY, { duration: 0.4 });
-      }
-      function scheduleSnap(self: ScrollTrigger) {
-        clearTimeout(snapTimer);
-        snapTimer = setTimeout(() => trySnap(self), SNAP_SETTLE_MS);
-      }
-
-      const tween = gsap.fromTo(
-        track,
-        { x: () => window.innerWidth },
-        {
-          x: () => -distance(),
-          ease: "none",
-          scrollTrigger: {
-            trigger: stage,
-            start: "top top",
-            end: () => `+=${pinDistance()}`,
-            // A short scrub, not the 1s of catch-up smoothing this had —
-            // that lag is its own kind of "slow", separate from (and on top
-            // of) how much scroll distance the pin spends (PIN_SCROLL_SPEED,
-            // above): even with a short pin range, a full second of the
-            // track visibly still catching up after the visitor's already
-            // stopped scrolling reads as sluggish. Both scrollTriggers below
-            // share this value — mismatched scrub speeds would let the
-            // heading and the cards visibly drift out of sync with each
-            // other since each one smooths independently.
-            scrub: 0.3,
-            pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            refreshPriority: 1,
-            onUpdate: scheduleSnap,
-          },
-        },
-      );
-
-      // The heading holds still while the first card is still approaching —
-      // then, the instant that card's leading edge actually reaches it, gets
-      // shoved out to the left instead of just sitting there getting covered.
-      // `overlapProgress` is exactly the scrub progress at which the card's
-      // left edge reaches the heading's right edge (both are pure functions of
-      // trackX, which moves in lockstep with progress since the card tween
-      // above is linear), so the two stay in sync without hard-coded numbers.
-      let headingExit: gsap.core.Tween | undefined;
-      if (heading) {
-        const overlapProgress = () => {
-          const total = totalDistance();
-          if (total <= 0) return 0;
-          return Math.min(1, Math.max(0, (window.innerWidth - heading.offsetWidth) / 2 / total));
-        };
-        headingExit = gsap.fromTo(
-          heading,
-          { x: 0 },
+        gsap.fromTo(
+          headingRef.current,
+          { y: 26, autoAlpha: 0 },
           {
-            x: () => -(window.innerWidth / 2 + heading.offsetWidth / 2),
-            ease: (p: number) => {
-              const start = overlapProgress();
-              return p < start ? 0 : (p - start) / (1 - start);
-            },
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.65,
+            ease: "power3.out",
             scrollTrigger: {
-              trigger: stage,
-              start: "top top",
-              end: () => `+=${pinDistance()}`,
-              // Same 0.3 as the card tween's own scrollTrigger above — see
-              // its comment. Left at the old 1s, the heading would visibly
-              // lag a full second behind cards that are now catching up in
-              // 0.3, drifting the two out of the sync they're meant to hold.
-              scrub: 0.3,
-              invalidateOnRefresh: true,
+              trigger: sectionRef.current,
+              start: "top 82%",
+              once: true,
             },
           },
         );
       }
 
-      // Publish this section's pin geometry for the floating scroll-cue
-      // button (see ScrollCueController): it shows a right-arrow instead of
-      // a down-arrow while this section is pinned, and needs to know how
-      // many cards there are and which absolute scrollY centres each one —
-      // same nearestIndex/progressForCard the snap above uses, so a card the
-      // cue button jumps to is exactly where free scrolling would have
-      // settled anyway. `-1` (the entry, see nearestIndex) is a real index
-      // here, not just an internal snap concept: it's what lets the cue
-      // button's own "back" step from card 0 to the entry first, instead of
-      // leaving this section outright the moment card 0 is reached.
-      const trigger = tween.scrollTrigger!;
-      const unregisterCue = setHorizontalCue({
-        el: stage,
-        cardCount,
-        minIndex: -1,
-        activeIndex: () => nearestIndex(trigger.progress),
-        scrollYForCard: (index) => {
-          const clamped = Math.min(cardCount - 1, Math.max(-1, index));
-          const progress = clamped === -1 ? 0 : progressForCard(clamped);
-          return trigger.start + progress * (trigger.end - trigger.start);
-        },
+      const cards = cardRefs.current.filter((el): el is HTMLElement => el !== null);
+      if (cards.length > 0) {
+        gsap.fromTo(
+          cards,
+          { y: 36, autoAlpha: 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.65,
+            stagger: 0.08,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 78%",
+              once: true,
+            },
+          },
+        );
+      }
+
+      // Desktop horizontal scroll scrub with GSAP ScrollTrigger
+      mm.add("(min-width: 1024px)", () => {
+        const stage = stageRef.current;
+        const viewport = viewportRef.current;
+        const track = trackRef.current;
+        if (!stage || !viewport || !track) return;
+
+        const getDistance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+        const getPinRange = () => Math.max(420, getDistance() * 1.15);
+
+        const tween = gsap.fromTo(
+          track,
+          { x: 0 },
+          {
+            x: () => -getDistance(),
+            ease: "none",
+            scrollTrigger: {
+              trigger: stage,
+              start: "top top",
+              end: () => `+=${getPinRange()}`,
+              scrub: 0.4,
+              pin: true,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              refreshPriority: 1,
+              onUpdate: (self) => {
+                const idx = Math.min(
+                  cardCount - 1,
+                  Math.max(0, Math.round(self.progress * (cardCount - 1))),
+                );
+                setActiveIndex(idx);
+              },
+            },
+          },
+        );
+
+        const st = tween.scrollTrigger ?? null;
+        triggerRef.current = st;
+
+        let unregisterCue: (() => void) | undefined;
+        if (st) {
+          unregisterCue = setHorizontalCue({
+            el: stage,
+            cardCount,
+            minIndex: 0,
+            activeIndex: () =>
+              Math.min(cardCount - 1, Math.max(0, Math.round(st.progress * (cardCount - 1)))),
+            scrollYForCard: (index) => {
+              const clamped = Math.min(cardCount - 1, Math.max(0, index));
+              const progress = cardCount > 1 ? clamped / (cardCount - 1) : 0;
+              return st.start + progress * (st.end - st.start);
+            },
+          });
+        }
+
+        return () => {
+          triggerRef.current = null;
+          unregisterCue?.();
+          tween.kill();
+          gsap.set(track, { clearProps: "transform" });
+        };
       });
 
       return () => {
-        clearTimeout(snapTimer);
-        tween.kill();
-        headingExit?.kill();
-        split?.revert();
-        unregisterCue();
+        mm.revert();
       };
     },
-    { scope: wrapRef, dependencies: [staticBaseline] },
+    { scope: sectionRef, dependencies: [skipMotion, staticBaseline, cardCount] },
   );
 
-  if (staticBaseline) {
-    return (
-      <section id="after-hero" className="relative overflow-hidden text-paper">
-        <ExpectCarousel />
-      </section>
-    );
-  }
+  const canPrev = activeIndex > 0;
+  const canNext = activeIndex < cardCount - 1;
 
   return (
-    <section id="after-hero" ref={wrapRef} className="relative overflow-hidden text-paper">
-      <div className="relative z-10">
-        <div ref={stageRef} className="relative h-screen">
-          {/* The title: centred inside the stage, alone until the card track
-              (below) slides in from off-screen right and, once in frame,
-              paints over it — so the heading only shows before/between
-              cards, never fighting them for attention. */}
-          <div className="absolute inset-0 flex items-center justify-center px-6 text-center sm:px-10">
+    <section
+      id="after-hero"
+      ref={sectionRef}
+      aria-labelledby="expect-devfest-heading"
+      className="relative overflow-hidden border-b border-white/15 bg-[#080C1B] text-white"
+    >
+      {/* Ambient lighting & subtle backdrop depth */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 22% 28%, rgba(66, 133, 244, 0.14) 0%, transparent 45%), radial-gradient(circle at 78% 72%, rgba(251, 188, 4, 0.12) 0%, transparent 48%), #080C1B",
+        }}
+      />
+
+      {/* Decorative bottom corner Google-coloured waves matching the visual reference */}
+      <svg
+        viewBox="0 0 380 95"
+        fill="none"
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-48 opacity-90 sm:h-16 sm:w-72"
+        preserveAspectRatio="none"
+      >
+        <path d="M0 24C68 18 132 45 186 95H0V24Z" fill="#EA4335" />
+        <path d="M110 95C168 50 258 46 365 95H110Z" fill="#4285F4" />
+      </svg>
+
+      <svg
+        viewBox="0 0 280 90"
+        fill="none"
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-0 z-10 h-12 w-44 opacity-90 sm:h-16 sm:w-64"
+        preserveAspectRatio="none"
+      >
+        <path d="M280 18C190 22 110 52 30 90H280V18Z" fill="#FBBC04" />
+      </svg>
+
+      <div
+        ref={stageRef}
+        className="relative z-20 flex min-h-[680px] flex-col justify-center pt-20 pb-16 sm:pt-24 sm:pb-20 lg:min-h-screen lg:pt-24 lg:pb-10"
+      >
+        <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-10 lg:px-14">
+          {/* Section Header */}
+          <div ref={headingRef} className="flex flex-col items-center text-center">
             <h2
-              ref={headingRef}
-              // Fluid, viewport-scaled size (not fixed breakpoint steps) so it
-              // reads at the same scale as the hero's WebGL "DevFest Chennai"
-              // title, which is sized off the 3D scene rather than a CSS class.
-              // font-bold, not the semibold every other heading uses: the hero's
-              // WebGL title is set in Google Sans Bold specifically, and this is
-              // the one heading meant to read at the same weight as it.
-              //
-              // whitespace-nowrap + a low clamp() floor (not the 3.5rem it used
-              // to be): on narrow phones the OLD floor was taller than the
-              // string could fit on one line at, so it wrapped to two —
-              // shrinking further via vw instead reads as one confident line
-              // running edge to edge, matching what this heading is going for,
-              // rather than an awkward two-line stack. 11vw (not 12) leaves a
-              // hair of breathing room against the section's own px-6/px-10
-              // padding so the text doesn't visually kiss the edge.
-              className="whitespace-nowrap text-[clamp(1.75rem,11vw,10rem)] font-bold leading-none tracking-tight"
+              id="expect-devfest-heading"
+              className="text-[32px] font-extrabold leading-[1.08] tracking-[-0.025em] text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)] sm:text-[44px] lg:text-[50px]"
             >
               {uiCopy.expectShowcase.heading}
             </h2>
           </div>
 
-          <div className="absolute inset-0 flex items-center overflow-hidden [scrollbar-width:none]">
-            <div ref={trackRef} className="flex will-change-transform">
-              {EXPECT_CARDS.map(({ item, photo, panelColor }, cardIndex) => {
-                return (
+          {/* Horizontal Showcase Area with Left / Right Controls */}
+          <div className="relative mt-8 sm:mt-10">
+            {/* Left Floating Arrow Button */}
+            <button
+              type="button"
+              onClick={() => scrollToCard(activeIndex - 1)}
+              disabled={!canPrev}
+              aria-label={uiCopy.expectShowcase.previousCardSr}
+              className={`absolute -left-2 top-1/2 z-30 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-[#080C1B]/85 text-white shadow-[0_8px_24px_rgba(0,0,0,0.55)] backdrop-blur-md transition-all duration-200 sm:inline-flex lg:-left-5 ${
+                canPrev
+                  ? "hover:scale-105 hover:border-white hover:bg-white/15 cursor-pointer"
+                  : "opacity-35 cursor-not-allowed"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                <path
+                  d="m15 18-6-6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Right Floating Arrow Button */}
+            <button
+              type="button"
+              onClick={() => scrollToCard(activeIndex + 1)}
+              disabled={!canNext}
+              aria-label={uiCopy.expectShowcase.nextCardSr}
+              className={`absolute -right-2 top-1/2 z-30 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-[#080C1B]/85 text-white shadow-[0_8px_24px_rgba(0,0,0,0.55)] backdrop-blur-md transition-all duration-200 sm:inline-flex lg:-right-5 ${
+                canNext
+                  ? "hover:scale-105 hover:border-white hover:bg-white/15 cursor-pointer"
+                  : "opacity-35 cursor-not-allowed"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                <path
+                  d="m9 18 6-6-6-6"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Cards Viewport:
+                - On mobile (<1024px) or static baseline: touch-friendly horizontal scroll with snap
+                - On desktop (>=1024px) with motion: overflow-hidden stage scrubbed by GSAP ScrollTrigger */}
+            <div
+              ref={viewportRef}
+              className={`-mx-6 px-6 py-4 sm:-mx-2 sm:px-2 ${
+                staticBaseline
+                  ? "overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  : "overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-visible lg:snap-none"
+              }`}
+            >
+              <div
+                ref={trackRef}
+                className="flex w-max items-stretch gap-5 sm:gap-6 lg:gap-7"
+              >
+                {EXPECT_CARDS.map(({ item, photoSrc, accent }, cardIndex) => (
                   <article
                     key={item.title}
-                    // Leaning parallelogram, sized so only ~1 (mobile) to ~1.5
-                    // (desktop) cards fit at once, making the horizontal scroll
-                    // read clearly. The slant is applied here and undone on the
-                    // inner layers so photo and text stay upright. No gap and no
-                    // corner radius between cards — they sit flush, edge to edge.
-                    className="relative h-[60vh] w-[84vw] shrink-0 skew-x-[-9deg] overflow-hidden border border-paper/15 md:h-[70vh] md:w-[58vw] lg:w-[48vw]"
+                    ref={(el) => {
+                      cardRefs.current[cardIndex] = el;
+                    }}
+                    className={`group relative flex h-[410px] w-[278px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-[28px] border-2 ${accent.borderClass} ${accent.hoverBorderClass} bg-[#0D1428] transition-all duration-300 ease-out hover:-translate-y-2.5 sm:h-[430px] sm:w-[300px] sm:snap-start lg:h-[435px] lg:w-[315px]`}
+                    style={{
+                      boxShadow: `0 20px 44px -14px rgba(0, 0, 0, 0.7), 0 0 28px -10px ${accent.glowColor}`,
+                    }}
                   >
-                    {/* Counter-skew keeps the photo upright (not sheared), and
-                        the zoom (scale) enlarges it enough to cover the slanted
-                        corners of the parallelogram with no gaps at any size. */}
-                    <div className="absolute inset-0 skew-x-[9deg] scale-[1.35]">
-                      {liteAssets ? (
-                        /*
-                         * Lite gets the brand halftone panel instead of the
-                         * photo — the same answer <Frame> gives any frame
-                         * without an image, so a lite card still reads as a
-                         * designed object rather than an empty one.
-                         *
-                         * These four were the single heaviest thing lite still
-                         * downloaded: raw archive originals, 366–505 KB each,
-                         * 1.76 MB in total, for imagery that is `aria-hidden`
-                         * and decorative.
-                         */
-                        <div aria-hidden className={`absolute inset-0 ${FALLBACK_BG[panelColor]}`} />
-                      ) : (
-                        photo && <ExpectCardPhoto src={photo.src} eager={cardIndex < 2} />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+                    {/* Top Google-coloured accent bar */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 top-0 z-30 h-1.5 opacity-90 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{ backgroundColor: accent.topBarColor }}
+                    />
+
+                    {/* Full-card photographic background */}
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <Image
+                        src={photoSrc}
+                        alt={item.title}
+                        fill
+                        preload={cardIndex < 3}
+                        fetchPriority={cardIndex < 2 ? "high" : "low"}
+                        decoding="async"
+                        sizes="(min-width: 1024px) 320px, (min-width: 640px) 300px, 280px"
+                        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
+                      />
+                      {/* Google-inspired colour gradient overlay */}
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 transition-opacity duration-300"
+                        style={{ background: accent.gradientStyle }}
+                      />
                     </div>
-                    <div className="relative flex h-full skew-x-[9deg] flex-col justify-end p-8 sm:p-12">
-                      <h3 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-                        {item.title}
-                      </h3>
-                      <p className="mt-3 max-w-md text-lg text-paper/85 sm:text-xl">
-                        {item.description}
-                      </p>
+
+                    {/* Upper framed photographic window for crisp visual depth */}
+                    <div className="relative z-10 m-3.5 mb-0 h-[46%] overflow-hidden rounded-2xl border border-white/20 shadow-inner">
+                      <Image
+                        src={photoSrc}
+                        alt=""
+                        aria-hidden="true"
+                        fill
+                        decoding="async"
+                        sizes="(min-width: 1024px) 300px, 260px"
+                        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15"
+                      />
+                      {/* Subtle category number pill in top-right of photo */}
+                      <span className="absolute right-3 top-3 rounded-full border border-white/25 bg-black/55 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                        {accent.badgeLabel}
+                      </span>
+                    </div>
+
+                    {/* Lower Card Content: Distinctive Icon, Large Readable Title, Supporting Description */}
+                    <div className="relative z-20 flex flex-1 flex-col justify-between p-6 pt-4 sm:p-7 sm:pt-5">
+                      {/* Distinctive Icon Badge */}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border ${accent.iconBgClass} shadow-md backdrop-blur-md transition-transform duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-[#080C1B]`}
+                        >
+                          <ExpectCardIcon index={cardIndex} />
+                        </span>
+                      </div>
+
+                      {/* Title & Description */}
+                      <div className="mt-3">
+                        <h3 className="text-2xl font-extrabold leading-[1.12] tracking-tight text-white drop-shadow-sm sm:text-[26px]">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm font-medium leading-[1.48] text-white/90 sm:text-[15px]">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
                   </article>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Controls & Pagination Indicators (touch-friendly on mobile + desktop) */}
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => scrollToCard(activeIndex - 1)}
+                disabled={!canPrev}
+                aria-label={uiCopy.expectShowcase.previousCardSr}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-sm transition-all sm:hidden ${
+                  canPrev ? "active:scale-95" : "opacity-35"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                  <path
+                    d="m15 18-6-6 6-6"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              <div
+                className="flex items-center gap-2.5"
+                role="tablist"
+                aria-label="What to expect at DevFest cards"
+              >
+                {EXPECT_CARDS.map(({ item, accent }, i) => {
+                  const isActive = i === activeIndex;
+                  return (
+                    <button
+                      key={item.title}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-label={item.title}
+                      onClick={() => scrollToCard(i)}
+                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        isActive
+                          ? `w-8 ${accent.dotActiveClass}`
+                          : "w-2.5 bg-white/30 hover:bg-white/55"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollToCard(activeIndex + 1)}
+                disabled={!canNext}
+                aria-label={uiCopy.expectShowcase.nextCardSr}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-sm transition-all sm:hidden ${
+                  canNext ? "active:scale-95" : "opacity-35"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                  <path
+                    d="m9 18 6-6-6-6"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>

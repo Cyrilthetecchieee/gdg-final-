@@ -33,14 +33,23 @@ export function ticketCta(): Cta {
  * site points straight at the form, in a new tab.
  */
 export function speakerCta(): Cta {
-  return { available: true, href: siteConfig.cfp.formUrl, label: "Submit a talk", external: true };
+  return {
+    available: true,
+    href: siteConfig.cfp.formUrl,
+    label: "Submit a talk",
+    external: siteConfig.cfp.formUrl.startsWith("http"),
+  };
 }
 
 /**
- * The volunteer pitch — always the external sign-up form, same reasoning as
- * speakerCta() above: no local /volunteer page to fall back to, so every
- * "Become a volunteer" slot points straight at the form, in a new tab.
+ * The volunteer pitch — resolves to `siteConfig.volunteer.formUrl` (either a
+ * local `/volunteer` page or an external sign-up form).
  */
 export function volunteerCta(): Cta {
-  return { available: true, href: siteConfig.volunteer.formUrl, label: "Become a volunteer", external: true };
+  return {
+    available: true,
+    href: siteConfig.volunteer.formUrl,
+    label: "Become a volunteer",
+    external: siteConfig.volunteer.formUrl.startsWith("http"),
+  };
 }

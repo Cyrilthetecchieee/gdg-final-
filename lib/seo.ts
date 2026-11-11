@@ -9,7 +9,7 @@ export const OG_IMAGE = {
   alt: siteConfig.name,
 } as const;
 
-export const siteDescription = `${siteConfig.tagline} — ${formatEventDate(siteConfig.date)} at ${siteConfig.venue.name}, Chennai. The flagship annual conference from ${siteConfig.chapter}.`;
+export const siteDescription = `${siteConfig.tagline} — ${formatEventDate(siteConfig.date)} in ${siteConfig.city}. The flagship annual conference from ${siteConfig.chapter}.`;
 
 /** Pages with a markdown twin. `lib/markdown-routes.json` is the one list (see scripts/markdown-rule.mjs). */
 const MARKDOWN_EXACT = new Set<string>(markdownRoutes.pages);
@@ -82,9 +82,9 @@ export function venuePostalAddress() {
   return {
     "@type": "PostalAddress" as const,
     streetAddress: siteConfig.venue.line1,
-    addressLocality: "Chennai",
+    addressLocality: siteConfig.city,
     addressRegion: "Tamil Nadu",
-    postalCode: "600113",
+    postalCode: "625001",
     addressCountry: "IN",
   };
 }

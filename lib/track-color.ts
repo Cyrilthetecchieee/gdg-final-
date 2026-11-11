@@ -21,34 +21,16 @@ type TrackPalette = {
 };
 
 const PALETTE: Record<string, TrackPalette> = {
-  "d7-auditorium": { text: "text-blue", bg: "bg-blue", border: "border-blue", cssVar: "var(--blue)" },
-  "d7-amphitheater": { text: "text-green", bg: "bg-green", border: "border-green", cssVar: "var(--green)" },
-  "agent-wars": { text: "text-red", bg: "bg-red", border: "border-red", cssVar: "var(--red)" },
-  lightning: { text: "text-yellow", bg: "bg-yellow", border: "border-yellow", cssVar: "var(--yellow)" },
-  "vibe-coding": { text: "text-purple", bg: "bg-purple", border: "border-purple", cssVar: "var(--purple)" },
-  "raman-hall": {
+  "ai-ml": { text: "text-blue", bg: "bg-blue", border: "border-blue", cssVar: "var(--blue)" },
+  "web-cloud": { text: "text-red", bg: "bg-red", border: "border-red", cssVar: "var(--red)" },
+  android: { text: "text-green", bg: "bg-green", border: "border-green", cssVar: "var(--green)" },
+  "open-source": { text: "text-yellow", bg: "bg-yellow", border: "border-yellow", cssVar: "var(--yellow)" },
+  "design-product": { text: "text-purple", bg: "bg-purple", border: "border-purple", cssVar: "var(--purple)" },
+  career: {
     text: "text-blue-halftone",
     bg: "bg-blue-halftone",
     border: "border-blue-halftone",
     cssVar: "var(--blue-halftone)",
-  },
-  pitchathon: {
-    text: "text-yellow-halftone",
-    bg: "bg-yellow-halftone",
-    border: "border-yellow-halftone",
-    cssVar: "var(--yellow-halftone)",
-  },
-  "creators-lounge": {
-    text: "text-green-halftone",
-    bg: "bg-green-halftone",
-    border: "border-green-halftone",
-    cssVar: "var(--green-halftone)",
-  },
-  "meetup-lounge": {
-    text: "text-red-halftone",
-    bg: "bg-red-halftone",
-    border: "border-red-halftone",
-    cssVar: "var(--red-halftone)",
   },
 };
 

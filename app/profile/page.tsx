@@ -22,7 +22,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "My profile",
-  description: "Your DevFest Chennai account, ticket and saved sessions.",
+  description: "Your DevFest Madurai account, ticket and saved sessions.",
   path: "/profile",
   index: false,
 });

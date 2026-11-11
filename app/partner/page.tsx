@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: partnership.heading,
   description:
-    "Team up with GDG Chennai on DevFest Chennai — promote the event, host a Roadshow, and get passes, discounts, stage time and more in return.",
+    "Team up with GDG Madurai on DevFest Madurai — promote the event, host a Roadshow, and get passes, discounts, stage time and more in return.",
   path: "/partner",
 });
 export const dynamic = "force-static";

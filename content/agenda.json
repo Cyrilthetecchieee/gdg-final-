@@ -1,923 +1,124 @@
 [
   {
-    "id": "check-in-and-badge-collection",
+    "id": "welcome",
     "track": null,
-    "start": "2026-10-17T08:00:00+05:30",
-    "end": "2026-10-17T09:00:00+05:30",
-    "title": "Check-in and Badge Collection",
-    "hall": "D7 Pre-Function Area",
+    "start": "2026-12-12T09:00:00+05:30",
+    "end": "2026-12-12T10:00:00+05:30",
+    "title": "Registration & breakfast",
+    "hall": "Community Lounge",
     "type": "break",
     "speakerSlugs": [],
-    "description": "This is where you land. You get your badge, goodies and your entry to DevFest."
+    "description": "Meet fellow attendees, collect your DevFest Madurai badge and get ready for the day. (Preview schedule — official times to be confirmed.)"
   },
   {
-    "id": "welcome-note",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T09:00:00+05:30",
-    "end": "2026-10-17T09:15:00+05:30",
-    "title": "Welcome Note",
-    "hall": "D7 Auditorium",
+    "id": "opening",
+    "track": "career",
+    "start": "2026-12-12T10:00:00+05:30",
+    "end": "2026-12-12T10:30:00+05:30",
+    "title": "Opening the possibilities",
+    "hall": "Main Stage",
     "type": "keynote",
-    "speakerSlugs": [],
-    "description": "First time to DevFest? Long time community member? Heard our stories already? Nevermind. We are here to provide you all the info you need to enjoy DevFest. So bring your highest energy, recharge your social battery and stay prepared for the day."
+    "speakerSlugs": ["gdg-madurai-organizers"],
+    "description": "A community welcome to DevFest Madurai 2026 — where heritage meets innovation."
   },
   {
     "id": "keynote",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T09:15:00+05:30",
-    "end": "2026-10-17T09:45:00+05:30",
-    "title": "Keynote",
-    "hall": "D7 Auditorium",
+    "track": "ai-ml",
+    "start": "2026-12-12T10:30:00+05:30",
+    "end": "2026-12-12T11:30:00+05:30",
+    "title": "The next chapter of AI",
+    "hall": "Main Stage",
     "type": "keynote",
-    "speakerSlugs": [
-      "swaathi-kakarla",
-      "karthik-kamalakannan"
-    ],
-    "description": "Not the keynote you expect to see. Come join in to listen to our iconic OG duo take the main stage. That \"Naan vanthuten nu solu, thirumbi vandhuten nu solu\" moment!"
-  },
-  {
-    "id": "sponsor-talk",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T09:45:00+05:30",
-    "end": "2026-10-17T10:15:00+05:30",
-    "title": "The Next Billion Users Won't Be Human",
-    "hall": "D7 Auditorium",
-    "type": "talk",
     "level": "Beginner",
-    "speakerSlugs": [
-      "sanju-sivalingam"
-    ],
-    "description": "Sponsored talk",
+    "speakerSlugs": ["keynote-speaker-tba"],
+    "description": "Sample keynote slot from a first prompt to production-grade intelligent systems. Speaker and final topic to be confirmed.",
     "prerequisites": []
   },
   {
-    "id": "sponsor-talk-2",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T10:15:00+05:30",
-    "end": "2026-10-17T10:25:00+05:30",
-    "title": "Qualcomm as a Dev-AI Native Company",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "kartikey-rawat"
-    ],
-    "description": "Sponsored talk",
+    "id": "panel",
+    "track": "web-cloud",
+    "start": "2026-12-12T11:30:00+05:30",
+    "end": "2026-12-12T12:15:00+05:30",
+    "title": "Building for the next billion",
+    "hall": "Main Stage",
+    "type": "panel",
+    "level": "Intermediate",
+    "speakerSlugs": ["web-cloud-speaker-tba"],
+    "description": "A sample panel on building thoughtful web and cloud technology at scale. Speaker lineup to be confirmed.",
     "prerequisites": []
   },
   {
-    "id": "sponsor-talk-3",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T10:25:00+05:30",
-    "end": "2026-10-17T10:35:00+05:30",
-    "title": "From Models to Decisions: How AI Is Reshaping Poshmark and Fashion Marketplace",
-    "hall": "D7 Auditorium",
+    "id": "android-modern-ui",
+    "track": "android",
+    "start": "2026-12-12T11:30:00+05:30",
+    "end": "2026-12-12T12:15:00+05:30",
+    "title": "Thoughtful Mobile Craft with Modern Android & Kotlin",
+    "hall": "Workshops & Labs",
     "type": "talk",
     "level": "Intermediate",
-    "speakerSlugs": [
-      "manu-vishwakarma",
-      "shreya-sevelar"
-    ],
-    "description": "How is AI changing a fashion marketplace? We’ll walk through Poshmark’s AI strategy and real-world use cases, and how shipping ML has moved from months of taxonomy design, labeling, training and active learning to agentic multimodal LLMs and decision models. LLMs are built as slow, deliberate System 2 tools, yet they’re often used for fast System 1 work like spam, intent and moderation classification, where confidence scores can’t be trusted. Meet JEV, a classifier that returns a deterministic answer with a calibrated probability you can act on. We’ll close with where the landscape is heading.",
-    "prerequisites": [
-      "Basic ML concepts (classification, model confidence)"
-    ]
-  },
-  {
-    "id": "beyond-the-happy-path-production-grade-agent-guardrails-huma",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T10:45:00+05:30",
-    "end": "2026-10-17T11:10:00+05:30",
-    "title": "Beyond the Happy Path: Production-Grade Agent Guardrails, Human Verification, Observability on GCP",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "saurabh-mishra"
-    ],
-    "description": "Practical patterns for securing, verifying, observing, auditing, and safely scaling AI agents on Google Cloud with Gemini and Vertex AI.\nThe goal is simple: build agents that don’t just work in a demo, but can be trusted in production.\nThis session explores how to move beyond the “happy path” and build AI agents that are secure, observable, and safe to operate at scale on Google Cloud.\nWe’ll look at practical patterns for implementing agent guardrails, least-privilege identity, human-in-the-loop verification, policy enforcement, and runtime protection using services & capabilities across GCP, Gemini and Vertex AI.\nGoogle Cloud provides built-in observability for agent metrics and supports tracing through OpenTelemetry, making it possible to understand agent behavior across models, tools & execution steps.\nWe’ll explore when an agent should act autonomously, when it should pause for human approval, and how to design a “fail safely” architecture when something goes wrong.",
-    "prerequisites": [
-      "Experience building AI agents",
-      "Basic Google Cloud familiarity"
-    ]
-  },
-  {
-    "id": "kotlin-over-the-air-reimagining-android-kmp-app-delivery",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T11:10:00+05:30",
-    "end": "2026-10-17T11:35:00+05:30",
-    "title": "Kotlin Over the Air: Reimagining Android/KMP App Delivery",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "aditya-shinde"
-    ],
-    "description": "Every Android team has asked this question:\n\"Why do we need a Play Store release for a small UI change?\"\nServer-driven UI promised faster iterations, but most solutions still hit the same limit: they can change screens, not behavior.\nIn this talk, I'll show how we built a system that delivers native Jetpack Compose experiences over the air without shipping a new app version. Using Kotlin compiler plugins, a lightweight on-device VM, and modern Android tooling, it runs code that never existed in the APK.\nYou'll learn:\n• Why JSON-based approaches eventually become limiting.\n• How native Compose can be delivered dynamically.\n• How the system stays secure, Play Store compliant, and maintainable.\n• How AI can generate features that are ready to run instantly.\nWhether you're into Compose, Android tooling, or simply shipping features faster, this talk will change how you think about app updates.",
-    "prerequisites": [
-      "Android development with Kotlin",
-      "Familiarity with Jetpack Compose"
-    ]
-  },
-  {
-    "id": "can-ai-help-a-city-breathe",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T10:45:00+05:30",
-    "end": "2026-10-17T11:20:00+05:30",
-    "title": "Can AI Help a City Breathe?",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "dishant-parakh"
-    ],
-    "description": "Air pollution is often framed as a measurement problem: AQI dashboards, monitors, satellite imagery, emission inventories and increasingly sophisticated prediction models. But cities like Chennai do not suffer from air pollution simply because they lack data. The harder question is what happens when pollution becomes visible.\nCan we identify its source? Distinguish construction dust from transport, industry, waste burning or pollution travelling from outside the city? Can the government intervene fast enough? Can enforcement isolate persistent polluters from background pollution? And can we tell whether an intervention actually improved air quality? “Can AI Help a City Breathe?” explores this gap between environmental intelligence and environmental action.\nThe session begins with the fundamentals: what air pollution is, why it matters, its health and economic impacts, how pollutants differ, how exposure occurs, and what measures such as the Air Quality Index (AQI) can and cannot tell us.\nTwo AI and tech applications will be examined in depth:\n1. Dust, construction and dispersed pollution: utilising data-driven tracking, digital tools, and localized mapping to help municipal corporations identify exact spots needing cleanup or repair.\n2. Vehicular and tailpipe emissions: remote sensing, automated detection, surveillance and data-enabled enforcement for transport emissions.\nThe session ultimately asks developers to think beyond building another dashboard or prediction model, towards action-oriented tools and models for the public.",
+    "speakerSlugs": ["android-speaker-tba"],
+    "description": "Preview session exploring Jetpack Compose, on-device AI and modern Android architecture. Speaker to be announced via CFP.",
     "prerequisites": []
   },
   {
-    "id": "creators-lounge-introduction",
-    "track": "creators-lounge",
-    "start": "2026-10-17T11:30:00+05:30",
-    "end": "2026-10-17T11:45:00+05:30",
-    "title": "Introduction to the Event",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Extra activity: One-minute Gemini Prompt Challenge (no scheduled time)."
-  },
-  {
-    "id": "creators-lounge-tech-fireside-chat",
-    "track": "creators-lounge",
-    "start": "2026-10-17T11:50:00+05:30",
-    "end": "2026-10-17T12:30:00+05:30",
-    "title": "Tech Fireside Chat",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "With Hareesh, Abhishek and Ragavendar."
-  },
-  {
-    "id": "creators-lounge-creator-hot-seat",
-    "track": "creators-lounge",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:00:00+05:30",
-    "title": "Creator Hot Seat (All)",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-lunch-and-networking",
-    "track": "creators-lounge",
-    "start": "2026-10-17T13:00:00+05:30",
-    "end": "2026-10-17T14:00:00+05:30",
-    "title": "Lunch and Networking",
-    "hall": "D7 Pre-Function Area",
-    "type": "break",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-create-with-google-flow",
-    "track": "creators-lounge",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T14:30:00+05:30",
-    "title": "Create with Google Flow",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-youtube-vs-instagram-debate",
-    "track": "creators-lounge",
-    "start": "2026-10-17T14:30:00+05:30",
-    "end": "2026-10-17T15:00:00+05:30",
-    "title": "YouTube vs Instagram Debate (All)",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-pass-the-object",
-    "track": "creators-lounge",
-    "start": "2026-10-17T15:00:00+05:30",
-    "end": "2026-10-17T15:15:00+05:30",
-    "title": "Pass the Object",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-guess-the-creator",
-    "track": "creators-lounge",
-    "start": "2026-10-17T15:15:00+05:30",
-    "end": "2026-10-17T15:30:00+05:30",
-    "title": "Guess the Creator",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": []
-  },
-  {
-    "id": "creators-lounge-creator-fireside-chat",
-    "track": "creators-lounge",
-    "start": "2026-10-17T15:30:00+05:30",
-    "end": "2026-10-17T16:00:00+05:30",
-    "title": "Creator Fireside Chat",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "With Sasikumar and Raghu."
-  },
-  {
-    "id": "community-project-showcase",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T10:45:00+05:30",
-    "end": "2026-10-17T11:15:00+05:30",
-    "title": "Community Project Showcase",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Project showcases from the community"
-  },
-  {
-    "id": "meetup-fun-activity",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T11:15:00+05:30",
-    "end": "2026-10-17T11:30:00+05:30",
-    "title": "Fun Activity",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "A short break from the screens."
-  },
-  {
-    "id": "open-mic-community-discussions",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T11:30:00+05:30",
-    "end": "2026-10-17T12:00:00+05:30",
-    "title": "Open Mic / Community Discussions",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Take the mic or join the conversation with the community."
-  },
-  {
-    "id": "meetup-fun-activity-2",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T12:00:00+05:30",
-    "end": "2026-10-17T12:15:00+05:30",
-    "title": "Fun Activity",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "A short break from the screens."
-  },
-  {
-    "id": "community-project-showcase-2",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T14:30:00+05:30",
-    "title": "Community Project Showcase",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Community projects, shown by the people who built them."
-  },
-  {
-    "id": "meetup-fun-activity-3",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T14:30:00+05:30",
-    "end": "2026-10-17T14:45:00+05:30",
-    "title": "Fun Activity",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "A short break from the screens."
-  },
-  {
-    "id": "gdg-on-campus-meetup",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T14:45:00+05:30",
-    "end": "2026-10-17T15:15:00+05:30",
-    "title": "GDG on Campus Meetup",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Students and GDG on Campus organisers meet and swap notes."
-  },
-  {
-    "id": "open-mic",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T15:15:00+05:30",
-    "end": "2026-10-17T16:15:00+05:30",
-    "title": "Open Mic",
-    "hall": "D7 Pre-Function Area",
-    "type": "lounge",
-    "speakerSlugs": [],
-    "description": "Take the mic. Share what you're building or learning."
-  },
-  {
-    "id": "agent-wars-signup-qualifier",
-    "track": "agent-wars",
-    "start": "2026-10-17T11:00:00+05:30",
-    "end": "2026-10-17T12:30:00+05:30",
-    "title": "Agent Wars: Signup & Qualifier",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
-    "level": "Intermediate",
-    "speakerSlugs": [],
-    "description": "Come, signup, pickup your qualifier challenge.\nChallenges involve you building agents. The agent execution will be benchmarked on parameters which will be revealed at the event.\nUse Antigravity or AI Studio or your hard core dev skills to build agents using Google ADK (Agent Development Kit)",
+    "id": "design-systems-session",
+    "track": "design-product",
+    "start": "2026-12-12T12:15:00+05:30",
+    "end": "2026-12-12T13:00:00+05:30",
+    "title": "Good Questions, Useful Products: Designing for People First",
+    "hall": "Workshops & Labs",
+    "type": "talk",
+    "level": "Beginner",
+    "speakerSlugs": ["design-speaker-tba"],
+    "description": "Preview session on product thinking, human-centred AI interfaces and design craft. Speaker to be announced.",
     "prerequisites": []
-  },
-  {
-    "id": "vibe-coding-lounge",
-    "track": "vibe-coding",
-    "start": "2026-10-17T11:00:00+05:30",
-    "end": "2026-10-17T12:00:00+05:30",
-    "title": "Vibe Lounge",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
-    "level": "Beginner",
-    "speakerSlugs": [],
-    "description": "Come vibe your way",
-    "prerequisites": []
-  },
-  {
-    "id": "workshop-agi",
-    "track": "raman-hall",
-    "start": "2026-10-17T11:00:00+05:30",
-    "end": "2026-10-17T12:30:00+05:30",
-    "title": "Offload Testing to Agents",
-    "hall": "Raman Hall",
-    "type": "workshop",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "somasundaram-mahesh"
-    ],
-    "description": "Sponsored workshop",
-    "prerequisites": [
-      "Laptop"
-    ]
-  },
-  {
-    "id": "simplified-performance-debugging-for-native-cross-platform-a",
-    "track": "lightning",
-    "start": "2026-10-17T11:00:00+05:30",
-    "end": "2026-10-17T11:20:00+05:30",
-    "title": "Simplified Performance Debugging for Native / Cross-Platform Apps Running on Android",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "shangeeth-sivan-adiyapatham"
-    ],
-    "description": "In this talk, we’ll build just enough understanding of what happens beneath your app — from CPUs, system calls, threads, and scheduling — to make sense of real performance problems.\nWe’ll then connect that mental model to Perfetto: how to record traces, relate trace slices back to your code, and identify where time is actually being spent.\nFinally, we’ll explore how AI can simplify and automate parts of this workflow, from capturing traces to analyzing them and helping you investigate bottlenecks faster.\nWhether your app is built with native Android, Flutter, React Native, or another framework running on Android, the same underlying system is doing the work.\nYou’ll leave with a practical approach to understanding, debugging, and eventually automating app performance investigations without needing to become an operating systems expert.",
-    "prerequisites": [
-      "Android app development (any framework)"
-    ]
-  },
-  {
-    "id": "gemma-101-fine-tuning-open-models-with-lora-transformers-and",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T11:35:00+05:30",
-    "end": "2026-10-17T12:00:00+05:30",
-    "title": "Gemma 101: Fine-Tuning Open Models with LoRA, Transformers & Differential Privacy the Deepmind Way",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Expert",
-    "speakerSlugs": [
-      "neeraj-pathak"
-    ],
-    "description": "This talk examines DeepMind's Gemma evaluations and the integration of differential privacy into LoRA and Transformer fine-tuning pipelines.\nHow does DeepMind evaluate Gemma across IMDB, CIFAR-10 & Tiny Shakespeare, and what does differential privacy actually look like inside LoRA and Transformer fine-tuning pipelines? Drawing on firsthand experience building these systems at JAX-Privacy, this talk covers honest model evaluation, GPU architecture for AI workloads, scaling agents on cloud infrastructure, and the open source best practices developers can steal from one of the world's best AI labs.",
-    "prerequisites": [
-      "Fine-tuning basics (LoRA, Transformers)",
-      "Python ML frameworks (JAX or PyTorch)"
-    ]
-  },
-  {
-    "id": "deep-tech-talk-2",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T11:20:00+05:30",
-    "end": "2026-10-17T11:55:00+05:30",
-    "title": "When AI Leaves the Lab: Building Physical AI People Can Trust",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "pulkit-verma"
-    ],
-    "description": "AI agents and robots are moving out of controlled labs into homes and workplaces, where they meet users with goals, constraints, and safety expectations their developers never anticipated. Benchmarks tell us how a system performs on someone else’s task, but they rarely tell a user what this system can safely do for them. This talk argues that assessment must become user-aligned. We need ways to discover, in interpretable terms, what a black-box agent can and cannot do, and to check it against the specific person and setting it will serve. Drawing on research in learning interpretable capability models, LLM-based planning, and safety in personal robotics, I’ll show how developers and scientists can probe their systems, express capabilities in human terms, and decide who should model safety when robots come home. The goal is physical AI that is not just capable, but human-compatible.",
-    "prerequisites": [
-      "Basic familiarity with AI agents or robotics"
-    ]
-  },
-  {
-    "id": "ai-assisted-sres-are-a-thing",
-    "track": "lightning",
-    "start": "2026-10-17T11:25:00+05:30",
-    "end": "2026-10-17T11:45:00+05:30",
-    "title": "AI Assisted SREs Are a Thing!",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "imran-roshan"
-    ],
-    "description": "This talk walks through what changes when AI moves from suggesting to acting. Gemini Cloud Assist correlates logs, metrics, and traces into a ranked list of hypotheses instead of three open tabs. Active Assist flags waste and risk before you go looking for it. And on the agentic end, an SRE agent can triage an alert, propose a fix, run it inside a Cloud Run Sandbox, and hand it to a human for approval, all with its own cryptographic identity, policy checks in plain English, and a full audit trail through Cloud Logging and Trace.\nWe'll look at real configs, real CLI commands, and where the guardrails actually live, so you leave knowing what's shippable today versus what's still a research preview.",
-    "prerequisites": [
-      "Basic SRE / incident response concepts",
-      "Google Cloud familiarity (helpful)"
-    ]
-  },
-  {
-    "id": "developing-and-using-owasp-nettacker-for-security-testing",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T12:00:00+05:30",
-    "end": "2026-10-17T12:25:00+05:30",
-    "title": "Developing and Using OWASP Nettacker for Security Testing",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "achintya-jai"
-    ],
-    "description": "A demonstration of OWASP Nettacker for network and vulnerability scanning, brute-force testing, bug hunting, enterprise use, and Python-based development.\nNettacker can simultaneously scan an entire network for multiple vulnerabilities and run brute-force attacks on them, in a matter of minutes. I talk about how to use it for bug hunting and network scanning, its primary features, its advantages over other available tools, how easily enterprises can adopt it, and finally its development and upcoming advancements. The tool is written entirely in Python and invites people to develop it along with us!",
-    "prerequisites": [
-      "Basic networking and security concepts"
-    ]
-  },
-  {
-    "id": "local-ai-the-google-gemma-edition",
-    "track": "lightning",
-    "start": "2026-10-17T11:50:00+05:30",
-    "end": "2026-10-17T12:10:00+05:30",
-    "title": "Local AI: The Google Gemma Edition",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "gokulbarath"
-    ],
-    "description": "Most AI today depends on the cloud — but it doesn't have to. This talk breaks down what local AI actually means and why it matters, then builds up from the fundamentals of how large language models work to Google's Gemma model family. From there, it covers how to select and run a Gemma model on constrained hardware like a Raspberry Pi 5, turning it into a private, always-available AI assistant with no cloud dependency. The talk closes by walking through a real deployment: connecting a locally hosted Gemma model to a Telegram bot, so the audience can see exactly what a fully offline, self-hosted AI system looks like end to end — from model choice to a working interface.",
-    "prerequisites": []
-  },
-  {
-    "id": "deep-tech-talk-3",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T11:55:00+05:30",
-    "end": "2026-10-17T12:30:00+05:30",
-    "title": "Automatic Defect Detection of Water / Sewer Pipeline",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "moumita-mukherjee"
-    ],
-    "description": "I will briefly introduce our company vision and explain how Artificial Intelligence and Computer Vision are helping us address challenges in water and sewer pipeline inspection. The talk will then provide a deeper technical overview of our automated defect detection approach, including using object detection models to identify and classify pipeline defects from inspection videos.\nI will cover the overall AI pipeline, from video acquisition and preprocessing to model training, inference, defect classification, and generating inspection outputs. The session will also discuss the challenges involved in working with real-world pipeline inspection data, such as variations in lighting and video quality, different defect appearances, class imbalance, and the need for reliable detection across diverse pipeline conditions.\nI will further explain the model development and optimization process, including dataset preparation, training strategies, evaluation metrics, and approaches used to improve model performance. Finally, I will discuss how the AI system can integrate into a practical pipeline inspection workflow and how automated defect detection can support faster, more consistent, and data-driven infrastructure assessment.",
-    "prerequisites": [
-      "Basic computer vision / object detection concepts"
-    ]
-  },
-  {
-    "id": "vibe-coding-lounge-2",
-    "track": "vibe-coding",
-    "start": "2026-10-17T12:00:00+05:30",
-    "end": "2026-10-17T12:35:00+05:30",
-    "title": "Vibe Coding Lounge",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
-    "level": "Beginner",
-    "speakerSlugs": [],
-    "description": "Talk details will be updated soon.",
-    "prerequisites": []
-  },
-  {
-    "id": "rethinking-infrastructure-for-agentic-workloads",
-    "track": "lightning",
-    "start": "2026-10-17T12:15:00+05:30",
-    "end": "2026-10-17T12:35:00+05:30",
-    "title": "Rethinking Infrastructure for Agentic Workloads",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Expert",
-    "speakerSlugs": [
-      "dhanush-kandhan"
-    ],
-    "description": "A case study on designing Google Cloud infrastructure, memory, authorization, isolation, execution, and observability for scalable MCP-based agentic workloads.\nSoftware was designed for human-paced traffic. Agentic workloads change that. A user can drive multiple agents making concurrent tool calls across systems, turning modest workloads into thousands of operations.\nMy team at letRetro faced this while building B2B agentic workflows. We built and operate our own MCP infrastructure on Google Cloud, rethinking execution, traffic, data and state.\nThis case study covers MCP traffic management, concurrent execution, tenant isolation, tool authorization, low-latency execution, failures, retries and observability.\nI’ll also cover how we built our own agent memory infrastructure instead of expanding system prompts or relying entirely on RAG. We redesigned application objects, relationships, workflow state, and interactions so agents retain durable context across tasks for B2B use cases.\nThe talk is for people building MCP servers and agent-enabled products, focusing on the architecture & trade-offs required to operate agentic workloads.",
-    "prerequisites": [
-      "Experience building MCP servers or agent-enabled products",
-      "Cloud infrastructure basics"
-    ]
-  },
-  {
-    "id": "lunch-2",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
-  },
-  {
-    "id": "lunch-7",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
-  },
-  {
-    "id": "lunch-8",
-    "track": "raman-hall",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
-  },
-  {
-    "id": "lunch-6",
-    "track": "meetup-lounge",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
   },
   {
     "id": "lunch",
-    "track": "agent-wars",
-    "start": "2026-10-17T12:30:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
+    "track": null,
+    "start": "2026-12-12T13:00:00+05:30",
+    "end": "2026-12-12T14:00:00+05:30",
+    "title": "Lunch & new connections",
+    "hall": "Community Lounge",
     "type": "break",
     "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
+    "description": "Take a break, connect with developers and students from across Madurai, and start a conversation."
   },
   {
-    "id": "lunch-3",
-    "track": "lightning",
-    "start": "2026-10-17T12:40:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
-  },
-  {
-    "id": "lunch-4",
-    "track": "vibe-coding",
-    "start": "2026-10-17T12:40:00+05:30",
-    "end": "2026-10-17T13:45:00+05:30",
-    "title": "Lunch",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Fuel for mind, heart and tummy!"
-  },
-  {
-    "id": "lessons-from-building-an-ai-native-product-ground-up",
-    "track": "lightning",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T14:20:00+05:30",
-    "title": "Lessons from Building an AI Native Product Ground Up",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "rashmi-asokan"
-    ],
-    "description": "If you are building an AI Native Product, you have more challenges than ever before.\nUnderstanding the capabilities and constraints of an LLM, making decisions on behalf of the user, taking hallucinations into account, helping users onboard, guardrails and more: all of these should be reflected in the interface, helping users adopt and use the product.\nBuilding is easy, but establishing trust and adoption is the differentiator.\nThis session will deep dive into the challenges of building an AI Native Product ground up: quick wins, what worked and what didn't. There are a good number of features we decided not to ship, taking the stakes into account, and product decisions that helped us ship.",
-    "prerequisites": []
-  },
-  {
-    "id": "hardware-lab",
-    "track": "raman-hall",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T16:45:00+05:30",
-    "title": "Building Physical AI: An Arduino UNO Q Workshop for Edge AI and Sensors (Group activity, Limited seats only)",
-    "hall": "Raman Hall",
+    "id": "workshop",
+    "track": "ai-ml",
+    "start": "2026-12-12T14:00:00+05:30",
+    "end": "2026-12-12T15:30:00+05:30",
+    "title": "From idea to working prototype",
+    "hall": "Workshops & Labs",
     "type": "workshop",
     "level": "Intermediate",
-    "speakerSlugs": [
-      "salman-faris"
-    ],
-    "description": "Play and build with Arduino UNO Q kits",
-    "prerequisites": [
-      "Laptop",
-      "Basic Python or Arduino programming"
-    ]
+    "speakerSlugs": ["ai-workshop-speaker-tba"],
+    "description": "A sample hands-on AI & Cloud workshop. Laptop requirements and setup instructions will be shared with the final agenda.",
+    "prerequisites": ["Laptop with modern browser"]
   },
   {
-    "id": "don-t-let-ai-agents-push-your-buttons-building-the-agentic-w",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T14:25:00+05:30",
-    "title": "Don't Let AI Agents Push Your Buttons: Building the Agentic Web with WebMCP",
-    "hall": "D7 Auditorium",
+    "id": "lightning",
+    "track": "open-source",
+    "start": "2026-12-12T16:00:00+05:30",
+    "end": "2026-12-12T17:00:00+05:30",
+    "title": "Small talks. Big ideas.",
+    "hall": "Main Stage",
     "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "jeeththenthar-l"
-    ],
-    "description": "This talk introduces WebMCP, an emerging, open W3C standard spearheaded by Google and Microsoft to make websites natively \"agent-ready\" without heavy backend middleware.\nWhile traditional backend Model Context Protocol (MCP) implementations connect LLMs directly to server-side environments via JSON-RPC, standard MCP runs headless and requires separate hosting, OAuth setups, and credentials. WebMCP moves this paradigm entirely to the client-side browser context. Operating over a browser-mediated message transport, the browser acts as a secure translation layer. Because the execution happens directly within the user's active browser tab, WebMCP automatically inherits the user’s live cookies, active login state, and security session.\nWe will explore the technical 5-step lifecycle of a WebMCP transaction. Attendees will learn how to implement WebMCP using its two primary pathways: the Declarative HTML API and the Imperative JavaScript API.",
-    "prerequisites": [
-      "Web development (HTML, JavaScript)",
-      "Basic understanding of MCP / AI agents"
-    ]
-  },
-  {
-    "id": "deep-tech-talk-4",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T14:35:00+05:30",
-    "title": "From Malware Images to Deepfake Detection: Unconventional Approaches in Applied AI",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "natarajan"
-    ],
-    "description": "This talk examines how unconventional problem representations and data-driven insights can lead to significant advances in applied research. Drawing on two case studies, Lakshmanan Nataraj discusses malware visualization, which transforms binary executables into images for malware classification, and GAN-generated image detection, which exploits subtle statistical and co-occurrence patterns to identify synthetic content.\nThe talk explores the technical ideas behind these contributions and their progression from research publications to patents, operational systems, and real-world applications. It also discusses strategies for identifying novel research directions, translating scientific insights into intellectual property, and bridging the gap between laboratory research and deployment. The talk concludes with perspectives from his recent involvement in AI for Science initiatives.",
-    "prerequisites": [
-      "Basic machine learning concepts"
-    ]
-  },
-  {
-    "id": "agent-wars-live-tournament-semi-finals",
-    "track": "agent-wars",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T15:30:00+05:30",
-    "title": "Agent Wars: Live Tournament (Semi-Finals)",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
-    "level": "Intermediate",
-    "speakerSlugs": [],
-    "description": "The best agent duels",
-    "prerequisites": [
-      "Antigravity",
-      "Google ADK",
-      "Google AI Studio"
-    ]
-  },
-  {
-    "id": "vibe-coding-lounge-3",
-    "track": "vibe-coding",
-    "start": "2026-10-17T14:00:00+05:30",
-    "end": "2026-10-17T16:30:00+05:30",
-    "title": "Vibe Coding Lounge",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
     "level": "Beginner",
-    "speakerSlugs": [],
-    "description": "Come vibe your way",
+    "speakerSlugs": ["open-source-speaker-tba"],
+    "description": "A sample lightning-talk session for open-source maintainers, first-time contributors and community stories.",
     "prerequisites": []
   },
   {
-    "id": "agent-wars-live-tournament-finals",
-    "track": "agent-wars",
-    "start": "2026-10-17T15:30:00+05:30",
-    "end": "2026-10-17T16:30:00+05:30",
-    "title": "Agent Wars: Finals",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "competition",
-    "level": "Intermediate",
-    "speakerSlugs": [],
-    "description": "The epic battle of the agents",
-    "prerequisites": [
-      "Antigravity",
-      "Google ADK",
-      "Google AI Studio"
-    ]
-  },
-  {
-    "id": "running-ai-where-it-matters-open-source-on-device-inference-",
-    "track": "lightning",
-    "start": "2026-10-17T14:25:00+05:30",
-    "end": "2026-10-17T14:45:00+05:30",
-    "title": "Running AI Where It Matters: Open Source On-Device Inference Across the Edge Cloud Continuum",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "aakash-dhakshnamoorthy"
-    ],
-    "description": "The talk covers Google LiteRT’s open-source stack for converting, quantizing, and deploying cloud-trained models to edge devices with offline and NPU-accelerated inference.\nCloud native architectures solved distributed computing. Now the frontier is the last mile: the device itself. Google LiteRT (formerly TensorFlow Lite, open sourced under Apache 2.0) is Google's production-grade runtime powering on-device AI across 2.7 billion devices. In this talk, we'll explore how LiteRT bridges the edge–cloud continuum: how models trained in the cloud (PyTorch, TensorFlow, JAX) are converted, quantized, and deployed to Android, iOS, web, and IoT with NPU acceleration and no cloud call at every inference. We'll cover the open source stack (LiteRT + LiteRT-LM + Gemma 4), real-world production patterns, and how cloud native teams can build privacy-first, offline-capable AI pipelines for the edge.",
-    "prerequisites": [
-      "Basic ML model training and deployment concepts"
-    ]
-  },
-  {
-    "id": "lets-have-fun-icebreaker-2",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T14:25:00+05:30",
-    "end": "2026-10-17T14:50:00+05:30",
-    "title": "Let's have fun - Icebreaker",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "speakerSlugs": [],
-    "prerequisites": []
-  },
-  {
-    "id": "deep-tech-talk-5",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T14:35:00+05:30",
-    "end": "2026-10-17T15:10:00+05:30",
-    "title": "AI & VR for Healthcare",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "nimeshika"
-    ],
-    "description": "This talk is about the use of AI and VR in healthcare. For AI, I will focus on how it is currently being used in healthcare settings (e.g. precision medicine). For VR, I will focus on how VR is being integrated into healthcare education to train the clinicians of tomorrow. I will also touch upon ‘patient care’ modules, which are how VR is being implemented in hospitals across the world to educate patients and also help ease their pain in certain clinical instances. This will cover the work we are doing at MediSim VR.",
-    "prerequisites": []
-  },
-  {
-    "id": "building-privacy-first-edge-ai-with-gemma-4",
-    "track": "lightning",
-    "start": "2026-10-17T14:50:00+05:30",
-    "end": "2026-10-17T15:10:00+05:30",
-    "title": "Building Privacy-First Edge AI with Gemma 4: Lessons from Winning a Google Build with AI Hackathon",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "gokulakrishnan-l"
-    ],
-    "description": "Privacy-first Edge AI with Gemma 4: local Ollama models, Cloudflare Tunnels exposure, guardrails, and lessons from the GDG Windsor Hackathon.\nDiscover how to build local, privacy-first Edge AI using Google’s Gemma 4. In this talk, I will share engineering insights from Gemma Monsters—1st place winner in the GDG Windsor Hackathon. Learn how we built a system running on local models via Ollama, safely exposed it via Cloudflare Tunnels, moved off Kaggle Notebooks, and implemented strict code guardrails to stop math hallucinations.",
-    "prerequisites": []
-  },
-  {
-    "id": "lets-have-fun-icebreaker",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T14:50:00+05:30",
-    "end": "2026-10-17T15:15:00+05:30",
-    "title": "Let's have fun - Icebreaker",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "speakerSlugs": [],
-    "prerequisites": []
-  },
-  {
-    "id": "deep-tech-workshop-machine-learning-the-physical-world",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T15:10:00+05:30",
-    "end": "2026-10-17T16:30:00+05:30",
-    "title": "Machine Learning the Physical World",
-    "hall": "D7 Amphitheater",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "ayana-ghosh"
-    ],
-    "description": "Applying AI and machine learning to the physical sciences presents challenges that are often different from those encountered in conventional data-driven applications. Scientific datasets are strongly shaped by what researchers choose to measure or calculate. As a result, even large databases of computed results may cover only a narrow region of the possible space. Physical laws impose constraints that data alone does not capture. In addition, the systems we want to understand often behave quite differently from the examples on which a model was trained.\nThis talk will introduce these challenges through examples spanning prediction of structure-property relationships, and the search for novel materials. A brief tour of current approaches will be presented, from random forests and neural networks to graph neural networks, physics-informed models, and large language models, highlighting how different methods incorporate different forms of scientific knowledge. The distinction between prediction and mechanistic understanding will then be explored, highlighting approaches that move beyond predicting what happens toward understanding why.",
-    "prerequisites": [
-      "Basic machine learning concepts"
-    ]
-  },
-  {
-    "id": "secure-frontend-ai-building-smart-web-apps-with-firebase-ai-",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T15:15:00+05:30",
-    "end": "2026-10-17T15:40:00+05:30",
-    "title": "Secure Frontend AI: Building Smart Web Apps with Firebase AI Logic & Gemini",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "srushti-raybhoge"
-    ],
-    "description": "Build a context-aware planner with Firebase AI Logic and Gemini while securing client-side requests and enforcing structured JSON responses.\nIntegrating Large Language Models into client-side web apps has historically been a security nightmare—until now. This workshop introduces Firebase AI Logic, Google's secure proxy architecture for bringing Gemini models straight to the frontend.\nTogether, we will build a highly interactive, context-aware planner app. We will cover:\n• Securing client-side AI requests without leaking API credentials.\n• Enforcing structured JSON data replies for seamless web UI rendering.",
-    "prerequisites": [
-      "Basic JavaScript / web development",
-      "Firebase basics (helpful)"
-    ]
-  },
-  {
-    "id": "building-ai-at-the-edge-developing-intelligent-applications-",
-    "track": "lightning",
-    "start": "2026-10-17T15:15:00+05:30",
-    "end": "2026-10-17T15:35:00+05:30",
-    "title": "Building AI at the Edge: Developing Intelligent Applications with Qualcomm AI Stack and On-Device AI",
-    "hall": "D6 Multi-purpose Hall",
-    "type": "talk",
-    "level": "Intermediate",
-    "speakerSlugs": [
-      "kartikey-rawat"
-    ],
-    "description": "This talk covers:\n• The Age of Inference\n• Why On-Device AI and Edge Compute\n• Preparing models for the Edge\n• Quantization\n• Android Integration and JNI Design\n• Performance lifecycle and production considerations",
-    "prerequisites": [
-      "Android development",
-      "Basic ML model concepts"
-    ]
-  },
-  {
-    "id": "opportunities-in-ai-personal-observations-on-culture-of-gold",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T15:40:00+05:30",
-    "end": "2026-10-17T16:05:00+05:30",
-    "title": "Opportunities in AI: Personal Observations on Culture of Goldrush in California",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "hariprasad-sudharshan"
-    ],
-    "description": "Frequently driving across the Bay Area, Hari discovers the talk of the town just from the billboards full of AI startups. It is undoubtedly the Mecca of tech: every room you enter is trying to build the next 100-million-dollar company, and they go after hard problems. Hari lives in the US and works in AI, and his upbringing in Chennai gives him a vantage point. This talk shares what that culture looks like, and where and how he thinks Chennai should compete in AI.",
-    "prerequisites": []
-  },
-  {
-    "id": "using-gemini-and-ai-studio-to-build-a-lead-gen-engine-for-b2",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T16:05:00+05:30",
-    "end": "2026-10-17T16:30:00+05:30",
-    "title": "Using Gemini & AI Studio to Build a Lead Gen Engine for B2B Tech Businesses",
-    "hall": "D7 Auditorium",
-    "type": "talk",
-    "level": "Beginner",
-    "speakerSlugs": [
-      "varun-poladiya"
-    ],
-    "description": "1. What are intent signals?\n2. Why are intent signals important in B2B marketing and lead generation?\n3. How lead gen used to happen before AI vs. now, with the use of AI.\n4. Hands-on: Building a motion on Gemini to get in-market, intent-driven B2B leads for each business on a recurring basis.\n5. Hands-on: Using Google AI Studio to build an application that finds and lists intent-driven B2B leads for each business, which internal marketing/business development teams can use every day.\nIdeal audience: B2B business founders of startups, SMEs and marketing leaders of large enterprises.\nNo coding required!",
-    "prerequisites": [
-      "Laptop with a Google account (to follow along)"
-    ]
-  },
-  {
-    "id": "quick-break",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T16:30:00+05:30",
-    "end": "2026-10-17T17:00:00+05:30",
-    "title": "Quick Break",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Break"
-  },
-  {
-    "id": "quick-break-2",
-    "track": "d7-amphitheater",
-    "start": "2026-10-17T16:30:00+05:30",
-    "end": "2026-10-17T17:00:00+05:30",
-    "title": "Quick Break",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Break"
-  },
-  {
-    "id": "quick-break-3",
-    "track": "agent-wars",
-    "start": "2026-10-17T16:30:00+05:30",
-    "end": "2026-10-17T17:00:00+05:30",
-    "title": "Quick Break",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Break"
-  },
-  {
-    "id": "quick-break-4",
-    "track": "lightning",
-    "start": "2026-10-17T16:30:00+05:30",
-    "end": "2026-10-17T17:00:00+05:30",
-    "title": "Quick Break",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Break"
-  },
-  {
-    "id": "quick-break-5",
-    "track": "vibe-coding",
-    "start": "2026-10-17T16:30:00+05:30",
-    "end": "2026-10-17T17:00:00+05:30",
-    "title": "Quick Break",
-    "hall": "F&B",
-    "type": "break",
-    "speakerSlugs": [],
-    "description": "Break"
-  },
-  {
-    "id": "closing-note",
-    "track": "d7-auditorium",
-    "start": "2026-10-17T17:00:00+05:30",
-    "end": "2026-10-17T17:30:00+05:30",
-    "title": "Closing Note",
-    "hall": "D7 Auditorium",
+    "id": "closing",
+    "track": "career",
+    "start": "2026-12-12T17:00:00+05:30",
+    "end": "2026-12-12T17:45:00+05:30",
+    "title": "A celebration of community",
+    "hall": "Community Lounge",
     "type": "keynote",
-    "speakerSlugs": [],
-    "description": "Ending the day with laughters, photographs and new connections."
+    "speakerSlugs": ["gdg-madurai-organizers"],
+    "description": "Closing session and community celebration with the organisers, volunteers and attendees who made DevFest Madurai happen."
   }
 ]

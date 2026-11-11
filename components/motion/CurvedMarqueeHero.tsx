@@ -15,6 +15,7 @@ import { heroCopy, heroButtons } from "@/components/motion/HeroCopy";
 import { optimizedSrc } from "@/components/motion/useAssetsLoaded";
 import { GlowButton } from "@/components/GlowButton";
 import { createAlphaRenderer } from "@/lib/webgl";
+import { siteConfig, uiCopy } from "@/site.config";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -55,12 +56,12 @@ const MOBILE_BREAKPOINT = 640;
 /** How much bigger each plane renders on mobile. */
 const MOBILE_PLANE_SCALE = 1.45;
 
-/** Tamil lockup shown on the back of the Chennai line after a click-flip. */
-const CHENNAI_TAMIL = "சென்னை";
-/** Shaped word stored as one PUA glyph — see scripts/build-tamil-typeface.mjs. */
-const TAMIL_TYPEFACE = "/fonts/noto-sans-tamil-chennai.typeface.json";
+/** Tamil lockup shown on the back of the city line after a click-flip. */
+const CITY_TAMIL = siteConfig.cityTamil;
+/** Shaped word stored as one PUA glyph — see scripts/build-city-brand-assets.mjs. */
+const TAMIL_TYPEFACE = "/fonts/noto-sans-tamil-city.typeface.json";
 const TAMIL_GLYPH = "\uE000";
-/** Google red on the “ai” of Chennai (matches --red). */
+/** Google red on the “ai” of Madurai (matches --red). */
 const GOOGLE_RED = 0xea4335;
 
 /** Max forward "coin flip" tilt (about the horizontal axis) as the hero scrolls out. */
@@ -793,26 +794,45 @@ export function CurvedMarqueeHero({ photos, paused = false }: { photos: ArchiveP
         className="absolute inset-0 z-10 max-sm:-translate-y-[8%]"
         style={{ touchAction: "pan-y" }}
       />
-      <h1 className="sr-only">{`${heroCopy.title} / ${CHENNAI_TAMIL}`}</h1>
+      <h1 className="sr-only">{`${siteConfig.name} / ${CITY_TAMIL}`}</h1>
 
-      {/* Calls to action. Labels and destinations come from heroCopy so this
-          hero and StaticHero always say the same thing — and so the ticket CTA
-          obeys lib/cta.ts, which is what stopped the rest of the site from
-          rendering "Get Tickets" as a link to /agenda. */}
-      {/* bottom-[24%] on mobile, not the desktop 16% — the whole strip/title
-          composition above shifts up by max-sm:-translate-y-[8%], and the
-          CTAs need to move up by roughly that same amount to stay the same
-          visual distance below the title rather than opening a gap. */}
+      {/* GDG Madurai branding eyebrow above the 3D title */}
+      <div className="pointer-events-none absolute inset-x-0 top-[14%] z-20 flex justify-center px-4 sm:top-[16%]">
+        <div className="inline-flex items-center gap-2.5 rounded-full border border-paper/15 bg-ink/80 px-4 py-1.5 text-xs font-medium tracking-wide text-paper/90 backdrop-blur-md sm:text-sm">
+          <span className="inline-flex items-center gap-1" aria-hidden="true">
+            <span className="h-2 w-2 rounded-full bg-blue" />
+            <span className="h-2 w-2 rounded-full bg-red" />
+            <span className="h-2 w-2 rounded-full bg-yellow" />
+            <span className="h-2 w-2 rounded-full bg-green" />
+          </span>
+          <span>{heroCopy.eyebrow}</span>
+          <span className="text-paper/40" aria-hidden="true">·</span>
+          <span className="font-semibold text-yellow">2026 Edition</span>
+        </div>
+      </div>
+
+      {/* Calls to action + Event date & venue metadata */}
       <div
-        className="absolute inset-x-0 z-20 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 px-4 text-lg text-paper max-sm:bottom-[24%] sm:gap-x-16 sm:bottom-[16%] sm:text-xl"
+        className="absolute inset-x-0 z-20 flex flex-col items-center gap-3.5 px-4 max-sm:bottom-[17%] sm:bottom-[13%]"
       >
-        {/* GlowButton routes internal hrefs through <Link> and opens external
-            ones in a new tab on its own — no target/rel needed here. */}
-        {heroButtons.map((btn) => (
-          <GlowButton key={btn.key} href={btn.href}>
-            <RollingText>{btn.label}</RollingText>
-          </GlowButton>
-        ))}
+        <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-paper/15 bg-ink/80 px-4 py-1.5 text-xs text-paper/85 backdrop-blur-md sm:text-sm">
+          <span className="font-medium text-paper">{heroCopy.dateLabel}</span>
+          <span className="text-paper/40" aria-hidden="true">·</span>
+          <span>{heroCopy.venueLabel}</span>
+          {!heroCopy.venueConfirmed && (
+            <span className="text-yellow">{uiCopy.common.unconfirmedSuffix}</span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-lg text-paper sm:gap-x-12 sm:text-xl">
+          {/* GlowButton routes internal hrefs through <Link> and opens external
+              ones in a new tab on its own — no target/rel needed here. */}
+          {heroButtons.map((btn) => (
+            <GlowButton key={btn.key} href={btn.href}>
+              <RollingText>{btn.label}</RollingText>
+            </GlowButton>
+          ))}
+        </div>
       </div>
     </section>
   );

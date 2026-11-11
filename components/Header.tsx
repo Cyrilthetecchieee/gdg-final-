@@ -3,56 +3,70 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navRoutes } from "@/lib/routes";
-import { volunteerCta } from "@/lib/cta";
-import { uiCopy } from "@/site.config";
+import { siteConfig, uiCopy } from "@/site.config";
 import { AuthButton } from "@/components/auth/AuthButton";
 
-/**
- * The site's navigation for lite mode. Full mode uses the hamburger menu
- * (components/HamburgerMenu.tsx) instead — its expanding panel leans on
- * transitions lite mode is meant to skip. Which one renders is decided purely
- * by CSS (`.nav-lite-only`, gated on `html.lite`), not JS, so there's no
- * hydration flash — see app/globals.css.
- *
- * Two layouts, one item list:
- *  • `< sm` — a native `<details>` disclosure. A hamburger, but with no
- *    animation and no JS, so it stays within lite's no-motion contract while
- *    the full item list stops overflowing a phone (which the horizontal
- *    scroll-bar below did once Agenda/Speakers were in the nav).
- *  • `sm+` — the horizontal pill bar. Scrollable rather than wrapping: a
- *    wrapping FIXED bar changes its own height at some widths, covering a
- *    different amount of the hero on a phone than a laptop. At `sm+` there's
- *    room, so this rarely actually scrolls.
- *
- * Reads `navRoutes` (lib/routes.ts) — same source as the 404's rescue grid,
- * so the header can't drift into linking a page that no longer exists.
- *
- * `fixed`, deliberately: this page is a chain of GSAP ScrollTrigger pins whose
- * scroll-distance math is measured off real element heights. A header in normal
- * flow would add its height to the top of the document and shift every one of
- * those measurements. Fixed takes it out of flow entirely.
- *
- * z-50 puts it above page content (z-40, the ScrollCue buttons) and below the
- * boot preloader (z-995) and <Loader> (z-1000) — the intro still covers it.
- */
+function GdgBracketsMark({ className = "h-7 w-9" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 34" fill="none" aria-hidden="true" className={className}>
+      {/* Left '<' bracket: top arm Red (#EA4335), bottom arm Blue (#4285F4) */}
+      <path
+        d="M18.5 5.5L5.5 17"
+        stroke="#EA4335"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.5 17L18.5 28.5"
+        stroke="#4285F4"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Right '>' bracket: top arm Green (#34A853), bottom arm Yellow (#FBBC04) */}
+      <path
+        d="M29.5 5.5L42.5 17"
+        stroke="#34A853"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M42.5 17L29.5 28.5"
+        stroke="#FBBC04"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
-  const volunteer = volunteerCta();
 
   const routeItems = navRoutes.map((route) => {
     const active = pathname === route.href;
+    const isLive = route.href === "/live";
     return (
-      <li key={route.href} data-hall-live-link={route.href === "/live" ? "" : undefined}>
+      <li key={route.href} data-hall-live-link={isLive ? "" : undefined}>
         <Link
           href={route.href}
-          // aria-current is what actually announces the active page; the colour
-          // change is the sighted equivalent, not a replacement for it.
           aria-current={active ? "page" : undefined}
-          className={`block rounded-full px-3 py-1.5 text-sm transition-colors ${
-            active ? "bg-paper/10 text-paper" : "text-paper/70 hover:bg-paper/5 hover:text-paper"
+          className={`relative inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[15px] font-medium transition-colors ${
+            active
+              ? "text-white after:absolute after:bottom-0 after:left-2.5 after:right-2.5 after:h-[2.5px] after:rounded-full after:bg-white"
+              : "text-white/80 hover:text-white"
           }`}
         >
-          {route.href === "/live" && <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-red" />}{route.label}
+          <span>{route.label}</span>
+          {isLive && (
+            <span
+              aria-hidden="true"
+              className="inline-block h-2 w-2 rounded-full bg-red shadow-[0_0_8px_#EA4335]"
+            />
+          )}
         </Link>
       </li>
     );
@@ -60,64 +74,77 @@ export function Header() {
 
   const volunteerItem = (
     <li>
-      <a
-        href={volunteer.href}
-        target="_blank"
-        rel="noreferrer"
-        className="block rounded-full px-3 py-1.5 text-sm text-paper/70 transition-colors hover:bg-paper/5 hover:text-paper"
+      <Link
+        href="/volunteer"
+        aria-current={pathname === "/volunteer" ? "page" : undefined}
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/[0.03] px-5 py-1.5 text-[14px] font-medium text-white transition-all hover:border-white hover:bg-white/10"
       >
-        {volunteer.label}
-      </a>
+        <span>Volunteer</span>
+        <span aria-hidden="true" className="text-xs leading-none">
+          ↗
+        </span>
+      </Link>
     </li>
   );
 
   return (
-    <header className="site-nav nav-lite-only pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center py-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:pl-[max(2rem,env(safe-area-inset-left,0px))] sm:pr-[max(2rem,env(safe-area-inset-right,0px))]">
-      {/* bg-surface, not an alpha wash: BracketsField paints a fixed 3D layer
-          behind the homepage and globals.css is explicit that a panel carrying
-          text over it needs an occluding surface. See --surface there. */}
-
-      {/* < sm: disclosure. The list drops straight in with no transition
-          (open/closed is instant) — the whole point in lite mode. The chevron
-          flips when open via an arbitrary variant on the <details>. */}
-      <details className="pointer-events-auto w-full max-w-xs sm:hidden [&[open]_.chevron]:rotate-180">
-        <summary
-          className="flex cursor-pointer list-none items-center justify-between rounded-full border border-paper/10 bg-surface px-4 py-2 text-sm text-paper backdrop-blur-sm [&::-webkit-details-marker]:hidden"
+    <header className="site-nav nav-lite-only fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#070B18]/80 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 py-3.5 sm:px-8 lg:px-12">
+        {/* Brand lockup: GDG 4-colour bracket icon + GDG Madurai */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2.5 text-white transition-opacity hover:opacity-90"
         >
-          <span className="inline-flex items-center gap-2">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            Menu
+          <GdgBracketsMark className="h-7 w-9 shrink-0" />
+          <span className="text-xl font-bold tracking-tight text-white sm:text-[23px]">
+            {siteConfig.chapter}
           </span>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true" className="chevron">
-            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </summary>
-        <nav aria-label={uiCopy.header.navAriaLabel} className="mt-2 rounded-2xl border border-paper/10 bg-surface p-2 backdrop-blur-sm">
-          <ul className="flex flex-col">
+        </Link>
+
+        {/* Desktop navigation */}
+        <nav aria-label={uiCopy.header.navAriaLabel} className="hidden lg:block">
+          <ul className="flex items-center gap-3 xl:gap-5 whitespace-nowrap">
             {routeItems}
-            {volunteerItem}
-            <li>
+            <li className="ml-1">{volunteerItem.props.children}</li>
+            <li className="ml-1">
               <AuthButton variant="pill" />
             </li>
           </ul>
         </nav>
-      </details>
 
-      {/* sm+: the horizontal pill bar. */}
-      <nav
-        aria-label={uiCopy.header.navAriaLabel}
-        className="pointer-events-auto hidden max-w-full overflow-x-auto rounded-full border border-paper/10 bg-surface px-2 py-1.5 backdrop-blur-sm sm:block"
-      >
-        <ul className="flex items-center gap-1 whitespace-nowrap">
-          {routeItems}
-          {volunteerItem}
-          <li>
-            <AuthButton variant="pill" />
-          </li>
-        </ul>
-      </nav>
+        {/* Mobile / tablet menu disclosure */}
+        <details className="relative lg:hidden [&[open]_.chevron]:rotate-180">
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-white/25 bg-[#0D1326]/90 px-4 py-2 text-sm font-medium text-white backdrop-blur-md [&::-webkit-details-marker]:hidden">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span>Menu</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true" className="chevron transition-transform">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <nav
+            aria-label={uiCopy.header.navAriaLabel}
+            className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/15 bg-[#0B1022]/95 p-3 shadow-2xl backdrop-blur-xl"
+          >
+            <ul className="flex flex-col gap-1">
+              {routeItems}
+              <li className="mt-2 pt-2 border-t border-white/10">
+                <Link
+                  href="/volunteer"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-white/50 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                >
+                  <span>Volunteer</span>
+                  <span aria-hidden="true">↗</span>
+                </Link>
+              </li>
+              <li className="mt-1">
+                <AuthButton variant="pill" />
+              </li>
+            </ul>
+          </nav>
+        </details>
+      </div>
     </header>
   );
 }

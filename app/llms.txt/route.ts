@@ -13,8 +13,8 @@ export const dynamic = "force-static";
  */
 const SHORT_LINKS = [
   { path: "/cfp", purpose: "call for proposals" },
-  { path: "/cfv", purpose: "volunteer sign-up" },
-  { path: "/about", purpose: "the GDG Chennai chapter page" },
+  { path: "/volunteer", purpose: "volunteer sign-up" },
+  { path: "/about", purpose: "the GDG Madurai chapter page" },
   { path: "/privacy", purpose: "the privacy policy" },
 ];
 

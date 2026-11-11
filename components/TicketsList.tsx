@@ -32,7 +32,7 @@ const FLAGSHIP_KEY = "devfest-2026";
 
 // Fallback for events with no real photography yet (see SubEvent's `image`
 // doc comment) — the same venue shot VenueReveal.tsx uses.
-const VENUE_IMAGE = { src: "/venue.webp", alt: uiCopy.common.venueAlt };
+const VENUE_IMAGE = { src: "/art/waterfront.webp", alt: uiCopy.common.venueAlt };
 
 type EventCard = {
   key: string;
@@ -88,7 +88,7 @@ function flagshipCard(): EventCard {
       ? { label: ticket.label, href: FLAGSHIP_TICKET_HREF, external: false }
       : { label: ticket.label },
     color: FLAGSHIP_COLOR,
-    image: { src: "/banner/main.webp", alt: siteConfig.name },
+    image: { src: "/art/ticket.webp", alt: siteConfig.name },
   };
 }
 

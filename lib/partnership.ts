@@ -24,7 +24,7 @@ export const ASSET_PENDING = "Shared with confirmed partners.";
 
 export const partnership = {
   heading: "Community Partnership",
-  lede: `${siteConfig.name} is a movement across the tech communities in and around Chennai, not a single event. Partner with ${siteConfig.chapter} and we grow together.`,
+  lede: `${siteConfig.name} is a movement across the tech communities in and around Madurai, not a single event. Partner with ${siteConfig.chapter} and we grow together.`,
 
   what: {
     heading: "What this is",
@@ -41,7 +41,7 @@ export const partnership = {
       "Reach people who'd never otherwise hear about DevFest",
       "Build real community-to-community ties, not one-off event hype",
       "Give smaller and local meetups a platform, and some love back",
-      "Make Chennai's tech ecosystem a little more connected",
+      "Make Madurai's tech ecosystem a little more connected",
     ],
     outro: "If you run a community, meetup or student group, this is a way to grow together instead of everyone working in a silo.",
   },
@@ -51,7 +51,7 @@ export const partnership = {
     items: [
       {
         title: "Promote the event",
-        body: "Spread the word about DevFest Chennai to your community, through whichever channels work for you — group chats, newsletters, socials.",
+        body: "Spread the word about DevFest Madurai to your community, through whichever channels work for you — group chats, newsletters, socials.",
       },
       {
         title: "Host a Roadshow",
@@ -63,7 +63,7 @@ export const partnership = {
         body: "When you post about your event or meetup:",
         points: [
           "Use the official hashtags",
-          "Add the DevFest Chennai Roadshow logo to your event page, banners and posters",
+          "Add the DevFest Madurai Roadshow logo to your event page, banners and posters",
           "Share photos and details after the event too, not just before",
         ],
       },
@@ -116,19 +116,19 @@ export const partnership = {
 
   assets: {
     heading: "Assets",
-    intro: "Everything you need to represent DevFest Chennai. Fill-ins arrive once you're a confirmed partner.",
+    intro: "Everything you need to represent DevFest Madurai. Fill-ins arrive once you're a confirmed partner.",
     // `href` + `linkText` → "Label — [linkText](href)". `href` alone → the
     // label itself is the link. `text` → spelled out inline. None → ASSET_PENDING.
     items: [
       {
-        label: "DevFest Chennai Roadshow logo",
-        href: "https://drive.google.com/drive/folders/1MuEXkWWBMmjioxTwd2rRKPkVW7oci-Bu?usp=sharing" as string | null,
-        linkText: "Access here",
+        label: "DevFest Madurai Roadshow logo",
+        href: null as string | null,
+        linkText: "Shared with confirmed partners",
       },
       {
         label: "Official hashtags",
         href: null as string | null,
-        text: "#DevFestRoadshow #DevFestChennai #DevFest2026Chennai #DevFestIndia #DevFest #GDGChennai #GDGIndia. Always tag @gdgchennai and @GDGIndia.",
+        text: "#DevFestRoadshow #DevFestMadurai #DevFest2026Madurai #DevFestIndia #DevFest #GDGMadurai #GDGIndia. Always tag @gdg_madurai and @GDGIndia.",
       },
       { label: "Code of Conduct", href: siteConfig.codeOfConduct.url },
     ],

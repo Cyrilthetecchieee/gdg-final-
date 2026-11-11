@@ -218,11 +218,19 @@ export function MoodSection() {
       <div ref={stageRef} className="relative flex h-dvh items-center overflow-hidden">
         <h2
           ref={textRef}
-          className={`whitespace-nowrap text-paper text-[clamp(3.5rem,12vw,10rem)] font-bold leading-none tracking-tight ${
+          className={`inline-flex items-center gap-8 whitespace-nowrap text-paper text-[clamp(3.5rem,12vw,10rem)] font-bold leading-none tracking-tight sm:gap-12 ${
             staticBaseline ? "mx-auto" : ""
           }`}
         >
-          {uiCopy.moodSection.heading}
+          <span>{uiCopy.moodSection.heading}</span>
+          <span aria-hidden="true" className="text-paper/30">·</span>
+          <span className="text-blue">BUILD</span>
+          <span aria-hidden="true" className="text-paper/30">·</span>
+          <span className="text-red">LEARN</span>
+          <span aria-hidden="true" className="text-paper/30">·</span>
+          <span className="text-yellow">NETWORK</span>
+          <span aria-hidden="true" className="text-paper/30">·</span>
+          <span className="text-green">CREATE</span>
         </h2>
       </div>
     </section>

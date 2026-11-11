@@ -12,7 +12,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "My agenda",
-  description: "Sessions you've saved for DevFest Chennai.",
+  description: "Sessions you've saved for DevFest Madurai.",
   path: "/my-agenda",
   index: false,
 });
@@ -36,7 +36,7 @@ export default async function MyAgendaPage() {
       <div className="relative z-10 mx-auto max-w-3xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
         {sessions.length > 0 && (
           <p className="mb-8 text-center text-base text-paper/70 sm:text-lg">
-            Sessions you&apos;ve saved for DevFest Chennai.
+            Sessions you&apos;ve saved for DevFest Madurai.
           </p>
         )}
 

@@ -28,13 +28,7 @@ const SeeYouThereSection = dynamic(() =>
 export function HomeBody({ brandShapes, archivePhotos }: { brandShapes: string[]; archivePhotos: ArchivePhoto[] }) {
   return (
     <>
-      {/* The sticky 3D brackets backdrop: a fixed black layer behind the whole
-          homepage (z-0). It never scrolls — content below slides over it — and
-          the hero covers it until the visitor scrolls down off the first
-          screen. All page content is lifted above it by the z-10 wrapper. */}
-      <BracketsField />
-
-      <div className="relative z-10">
+      <div className="relative z-10 bg-[#080C1B]">
         {/* If the motion hero throws at runtime, degrade to the static hero
             instead of taking down the whole homepage. The fallback is
             StaticHero, not CurvedMarqueeHero: a fallback that itself needs

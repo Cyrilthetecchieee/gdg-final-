@@ -13,6 +13,6 @@
   { "id": "android-oreo", "name": "Oreo", "subtitle": "Android 8.0", "icon": "🍪", "accent": "#F9AB00" },
   { "id": "android-pie", "name": "Pie", "subtitle": "Android 9.0", "icon": "🥧", "accent": "#EA4335" },
   { "id": "angular", "name": "Angular", "subtitle": "Web Framework", "icon": "🅰️", "accent": "#EA4335" },
-  { "id": "devfest", "name": "DevFest", "subtitle": "GDG Chennai", "icon": "🎪", "accent": "#34A853" },
+  { "id": "devfest", "name": "DevFest", "subtitle": "GDG Madurai", "icon": "🎪", "accent": "#34A853" },
   { "id": "room", "name": "Room DB", "subtitle": "Jetpack SQLite", "icon": "💾", "accent": "#F9AB00" }
 ]

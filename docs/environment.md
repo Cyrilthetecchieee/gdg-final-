@@ -222,3 +222,9 @@ the JSON files.
   the Worker preview. No Next.js rebuild is needed to toggle a deployed switch.
 - See [the emergency runbook](hall-emergency-switch.md) for existing-tab behavior,
   the 20-second public connection fallback and Agenda prerequisites.
+
+### `DFS_ADMIN_KEY` / `DFS_SESSION_SECRET` / `DFS_DATA_DIR`
+
+- **Type:** runtime secret (`DFS_ADMIN_KEY`, `DFS_SESSION_SECRET`) / runtime path (`DFS_DATA_DIR`)
+- **Used by:** [`lib/dfs-auth.ts`](../lib/dfs-auth.ts) and [`lib/dfs-storage.ts`](../lib/dfs-storage.ts) for the Madurai DFS 2026 selected participants portal (`/dfs-2026-selected`, `/dfs-2026-manage`, `/api/dfs-2026/*`).
+- **Required:** optional in local development (falls back to a development key); required in production to secure `/dfs-2026-manage`.

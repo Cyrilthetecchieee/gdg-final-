@@ -19,7 +19,7 @@ export function SiteJsonLd() {
             "@type": "Organization",
             "@id": ORG_ID,
             name: siteConfig.chapter,
-            alternateName: "Google Developer Group Chennai",
+            alternateName: "Google Developer Group Madurai",
             url: siteConfig.url,
             email: siteConfig.contact.email,
             logo: {

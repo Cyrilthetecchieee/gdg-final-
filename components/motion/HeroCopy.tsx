@@ -47,21 +47,22 @@ export const heroCopy = {
  * allow-list once it is — so `HERO_BUTTONS` without `agenda` hides it even
  * after the agenda is published.
  */
-const HERO_BUTTON_ORDER = ["tickets", "cfp", "volunteer", "agenda"] as const;
+const HERO_BUTTON_ORDER = ["tickets", "agenda", "cfp", "volunteer"] as const;
+const DEFAULT_HERO_BUTTONS = ["tickets", "agenda"] as const;
 type HeroButtonKey = (typeof HERO_BUTTON_ORDER)[number];
 
 export type HeroButton = { key: HeroButtonKey; href: string; label: string };
 
 const heroButtonDefs: Record<HeroButtonKey, HeroButton | null> = {
   tickets: { key: "tickets", href: heroCopy.ticket.href, label: uiCopy.common.getTicketsLabel },
+  agenda: heroCopy.agenda ? { key: "agenda", href: heroCopy.agenda.href, label: heroCopy.agenda.label } : null,
   cfp: { key: "cfp", href: speakerCta().href, label: uiCopy.heroCopy.cfpLabel },
   volunteer: { key: "volunteer", href: heroCopy.volunteer.href, label: heroCopy.volunteer.label },
-  agenda: heroCopy.agenda ? { key: "agenda", href: heroCopy.agenda.href, label: heroCopy.agenda.label } : null,
 };
 
 const heroButtonAllowList: readonly HeroButtonKey[] = (() => {
   const raw = process.env.HERO_BUTTONS?.trim();
-  if (!raw) return HERO_BUTTON_ORDER;
+  if (!raw) return DEFAULT_HERO_BUTTONS;
   const requested = new Set(raw.split(",").map((s) => s.trim()).filter(Boolean));
   return HERO_BUTTON_ORDER.filter((key) => requested.has(key));
 })();

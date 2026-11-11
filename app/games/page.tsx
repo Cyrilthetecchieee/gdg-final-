@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Mini Games",
   description:
-    "Play DevFest Chennai tech mini-games: Archive Jigsaw, Tech Crosswords, Memory Matrix and Speed Typer. Authenticate to compete on the global leaderboard.",
+    "Play DevFest Madurai tech mini-games: Archive Jigsaw, Tech Crosswords, Memory Matrix and Speed Typer. Authenticate to compete on the global leaderboard.",
   path: "/games",
 });
 
