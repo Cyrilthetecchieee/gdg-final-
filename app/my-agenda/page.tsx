@@ -23,7 +23,7 @@ export default async function MyAgendaPage() {
 
   const session = await auth();
   if (!session?.user?.uid) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent("/my-agenda")}`);
+    redirect("/");
   }
 
   const keys = await listFavorites(session.user.uid);

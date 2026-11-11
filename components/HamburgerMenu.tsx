@@ -10,7 +10,6 @@ import { speakerCta } from "@/lib/cta";
 import { siteConfig, uiCopy } from "@/site.config";
 import { RollingText } from "@/components/motion/RollingText";
 import { AuthButton } from "@/components/auth/AuthButton";
-import { AvatarButton } from "@/components/auth/AvatarButton";
 import { useHeaderTitleContext, resolveHeaderTitle } from "@/components/HeaderTitleContext";
 import { TRANSITION_IN_MS } from "@/components/motion/MotionProvider";
 import { shouldUseStaticBaseline } from "@/lib/motion-prefs";
@@ -342,7 +341,6 @@ export function HamburgerMenu() {
 
             {/* Right section: Avatar button + Hamburger menu button */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-11 justify-end">
-              <AvatarButton hidden={open} inline />
               {hamburgerButton}
             </div>
           </div>

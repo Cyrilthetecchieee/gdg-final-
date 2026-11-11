@@ -20,10 +20,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   session: { strategy: "jwt" },
   trustHost: true,
-  pages: {
-    signIn: "/signin",
-    error: "/signin", // Redirect to custom error handler on sign-in errors
-  },
   callbacks: {
     // Post-sign-in / post-sign-out landing. Only ever same-origin: a relative
     // target is sanitised to a path (no open redirects — see safeInternalPath),

@@ -42,7 +42,7 @@ export function GET() {
     tracks: siteConfig.tracks,
     pages,
     shortLinks: SHORT_LINKS,
-    accountPaths: [...siteRoutes.filter((route) => route.noIndex).map((route) => route.href), "/signin"],
+    accountPaths: siteRoutes.filter((route) => route.noIndex).map((route) => route.href),
   });
 
   return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });

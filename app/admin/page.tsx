@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.uid) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent("/admin")}`);
+    redirect(`/api/auth/signin?callbackUrl=${encodeURIComponent("/admin")}`);
   }
   const access = await getAccess(session.user.uid);
   if (!access) {

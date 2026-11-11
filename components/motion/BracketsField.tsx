@@ -634,7 +634,6 @@ export const BRACKETS_FIELD_ROUTES = [
   "/tickets",
   "/tickets/select",
   "/agenda",
-  "/signin",
   "/my-agenda",
   "/memories",
   "/partner",

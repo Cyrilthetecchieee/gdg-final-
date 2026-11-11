@@ -42,7 +42,7 @@ export default async function AdminUsersPage({
   const q = first(sp.q).trim();
   const session = await auth();
   if (!session?.user?.uid) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent("/admin/users")}`);
+    redirect(`/api/auth/signin?callbackUrl=${encodeURIComponent("/admin/users")}`);
   }
   const me = await getAccess(session.user.uid);
   if (!me) {
