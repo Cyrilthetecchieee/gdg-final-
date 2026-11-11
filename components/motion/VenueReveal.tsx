@@ -612,6 +612,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
               start: "top 82%",
               once: true,
             },
+            immediateRender: false,
           },
         );
       }
@@ -631,6 +632,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
               start: "top 82%",
               once: true,
             },
+            immediateRender: false,
           },
         );
       }
@@ -638,7 +640,6 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
       // 3. Madurai Architectural SVG Draw-On Animation
       if (archSvgRef.current && archCardRef.current) {
         const strokes = archSvgRef.current.querySelectorAll<SVGGeometryElement>("[data-arch-stroke]");
-        gsap.set(strokes, { drawSVG: "0%" });
 
         const archTl = gsap.timeline({
           scrollTrigger: {
@@ -649,8 +650,9 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
           },
         });
 
-        archTl.to(
+        archTl.fromTo(
           strokes,
+          { drawSVG: "0%" },
           {
             drawSVG: "100%",
             duration: 1.4,
@@ -659,6 +661,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
               from: "center",
             },
             ease: "power2.out",
+            immediateRender: false,
           },
           0,
         );
@@ -725,6 +728,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
               start: "top 85%",
               once: true,
             },
+            immediateRender: false,
           },
         );
       }
@@ -1147,7 +1151,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-yellow/60 hover:bg-white/15"
                   >
-                    <RollingText text={uiCopy.venueReveal.getDirectionsLabel} />
+                    <RollingText>{uiCopy.venueReveal.getDirectionsLabel}</RollingText>
                   </a>
 
                   {cta.href && (
@@ -1155,7 +1159,7 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
                       href={cta.href}
                       className="inline-flex items-center justify-center rounded-full bg-yellow px-6 py-3 text-sm font-bold text-[#080C1B] transition-transform hover:scale-[1.02]"
                     >
-                      <RollingText text={uiCopy.common.getTicketsLabel} />
+                      <RollingText>{uiCopy.common.getTicketsLabel}</RollingText>
                     </Link>
                   )}
                 </div>
