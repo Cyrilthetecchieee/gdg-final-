@@ -828,7 +828,7 @@ export function CurvedMarqueeHero({ photos, paused = false }: { photos: ArchiveP
           {/* GlowButton routes internal hrefs through <Link> and opens external
               ones in a new tab on its own — no target/rel needed here. */}
           {heroButtons.map((btn) => (
-            <GlowButton key={btn.key} href={btn.href}>
+            <GlowButton key={btn.key} href={btn.href} target={btn.external ? "_blank" : undefined} rel={btn.external ? "noreferrer" : undefined}>
               <RollingText>{btn.label}</RollingText>
             </GlowButton>
           ))}

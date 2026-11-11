@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { heroCopy } from "@/components/motion/HeroCopy";
 
 const MaduraiHero3DBrackets = dynamic(
   () => import("./MaduraiHero3DBrackets").then((m) => ({ default: m.MaduraiHero3DBrackets })),
@@ -207,15 +208,17 @@ export function StaticHero({
 
             {/* Action Buttons: [Get tickets ↗] and [See agenda] */}
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Link
-                href="/tickets"
+              <a
+                href={heroCopy.ticket.href}
+                target={heroCopy.ticket.external ? "_blank" : undefined}
+                rel={heroCopy.ticket.external ? "noreferrer" : undefined}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-bold text-[#0A0E1A] shadow-[0_8px_28px_rgba(0,0,0,0.4)] transition-transform hover:scale-[1.02] hover:bg-white/95"
               >
-                <span>Get tickets</span>
+                <span>{heroCopy.ticket.label.replace(" →", "")}</span>
                 <span aria-hidden="true" className="text-sm font-bold">
                   ↗
                 </span>
-              </Link>
+              </a>
 
               <Link
                 href="/agenda"

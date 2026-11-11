@@ -53,9 +53,20 @@ export function TicketStub() {
       <div className="ticket-stub__end">
         <p className="text-xs uppercase tracking-[0.2em] text-paper/65">{uiCopy.ticketStub.admitOneLabel}</p>
 
-        <Button href={cta.href} size="lg" className="mt-4">
-          {cta.label}
-        </Button>
+        {cta.external ? (
+          <a
+            href={cta.href}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-blue px-6 py-3 text-base font-semibold text-ink"
+          >
+            {cta.label}
+          </a>
+        ) : (
+          <Button href={cta.href} size="lg" className="mt-4">
+            {cta.label}
+          </Button>
+        )}
       </div>
     </TiltCard>
   );

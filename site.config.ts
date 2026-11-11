@@ -120,11 +120,8 @@ export const siteConfig = {
   capacityClaim: "Developers, students & creators",
 
   ticketing: {
-    // Sold through our own /tickets page. `ticketCta()` in lib/cta.ts always
-    // points here, so every "Get Tickets" CTA site-wide (hero, header, ticket
-    // stub, 404 highlights, ShowMoodSection) lands on a real page.
-    href: "/tickets",
-    availableLabel: "Get Tickets →",
+    href: "https://openmadurai.org/forms/devfest-madurai-2026-registration-form",
+    availableLabel: "Register now →",
   },
 
   // The /tickets/select page's ticket picker. "I'm a ___" chooses the

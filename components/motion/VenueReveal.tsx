@@ -1155,12 +1155,23 @@ export function VenueReveal({ brandShapes: _brandShapes }: { brandShapes: string
                   </a>
 
                   {cta.href && (
+                    cta.external ? (
+                      <a
+                        href={cta.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center rounded-full bg-yellow px-6 py-3 text-sm font-bold text-[#080C1B] transition-transform hover:scale-[1.02]"
+                      >
+                        <RollingText>{uiCopy.common.getTicketsLabel}</RollingText>
+                      </a>
+                    ) : (
                     <Link
                       href={cta.href}
                       className="inline-flex items-center justify-center rounded-full bg-yellow px-6 py-3 text-sm font-bold text-[#080C1B] transition-transform hover:scale-[1.02]"
                     >
                       <RollingText>{uiCopy.common.getTicketsLabel}</RollingText>
                     </Link>
+                    )
                   )}
                 </div>
 

@@ -50,12 +50,19 @@ const HERO_BUTTON_ORDER = ["tickets", "agenda", "cfp"] as const;
 const DEFAULT_HERO_BUTTONS = ["tickets", "agenda"] as const;
 type HeroButtonKey = (typeof HERO_BUTTON_ORDER)[number];
 
-export type HeroButton = { key: HeroButtonKey; href: string; label: string };
+export type HeroButton = { key: HeroButtonKey; href: string; label: string; external: boolean };
 
 const heroButtonDefs: Record<HeroButtonKey, HeroButton | null> = {
-  tickets: { key: "tickets", href: heroCopy.ticket.href, label: uiCopy.common.getTicketsLabel },
-  agenda: heroCopy.agenda ? { key: "agenda", href: heroCopy.agenda.href, label: heroCopy.agenda.label } : null,
-  cfp: { key: "cfp", href: speakerCta().href, label: uiCopy.heroCopy.cfpLabel },
+  tickets: {
+    key: "tickets",
+    href: heroCopy.ticket.href,
+    label: heroCopy.ticket.label,
+    external: heroCopy.ticket.external,
+  },
+  agenda: heroCopy.agenda
+    ? { key: "agenda", href: heroCopy.agenda.href, label: heroCopy.agenda.label, external: false }
+    : null,
+  cfp: { key: "cfp", href: speakerCta().href, label: uiCopy.heroCopy.cfpLabel, external: speakerCta().external },
 };
 
 const heroButtonAllowList: readonly HeroButtonKey[] = (() => {
