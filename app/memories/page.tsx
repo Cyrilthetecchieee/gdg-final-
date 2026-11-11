@@ -33,7 +33,7 @@ export default async function MemoriesPage() {
           skips the drift-then-land intro. Under reduced-motion / lite / save-data
           it no-ops and FooterLogo falls back to the flat SVG. */}
       <BracketsField mode="settled" />
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
+      <div className="relative z-10 min-h-screen bg-ink px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
         <p className="mb-8 text-center text-base text-paper/70 sm:text-lg">
           {uiCopy.memoriesPage.body}
         </p>

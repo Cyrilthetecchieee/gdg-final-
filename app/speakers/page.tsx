@@ -24,7 +24,7 @@ export default async function SpeakersPage() {
   const ordered = sortSpeakersByAgenda(speakers, agenda, PINNED_SPEAKER_SLUGS);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
+    <div className="min-h-screen bg-ink px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
       <SpeakerWall speakers={ordered} limit={ordered.length} />
     </div>
   );
