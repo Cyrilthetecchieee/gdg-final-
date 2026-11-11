@@ -17,7 +17,7 @@ export default async function AgendaPage() {
   const agenda = await getAgenda();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
+    <div className="min-h-screen bg-ink px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
       <SimpleAgenda sessions={agenda} />
     </div>
   );

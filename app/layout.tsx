@@ -7,7 +7,6 @@ import { siteConfig, uiCopy } from "@/site.config";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { BootPreloaderRelease } from "@/components/motion/BootPreloaderRelease";
 import { ScrollCueController } from "@/components/motion/ScrollCue";
-import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { Header } from "@/components/Header";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -214,7 +213,6 @@ export default function RootLayout({
           </main>
           <Footer />
           <ScrollCueController />
-          <ScrollProgress />
               </MotionProvider>
             </HeaderTitleProvider>
           </FavoritesProvider>
